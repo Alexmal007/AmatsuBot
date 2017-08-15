@@ -8,16 +8,16 @@ namespace osu_mania_bot
 {
     class Data
     {
-        private static string _api = "Your osu! api key";
+        private static string _api = "your osu! api key";
         public static string GetMap(Double _pp, string _keys)
         {
             try
             {
                 Random rand = new Random();
                 Double formula = _pp / 10;
-                StreamReader reader = new StreamReader(_keys + "k_table.txt");
-                string[] strings = reader.ReadToEnd().Split('\r');
-                string[] scores = new string[15000];
+                StreamReader reader = new StreamReader(_keys + "keys.txt");
+                string[] strings = reader.ReadToEnd().Split('\n');
+                string[] scores = new string[2100];
                 for (int i = 0; i < strings.Length - 1; i++)
                 {
                     string score = strings[i].Substring(strings[i].IndexOf(',')+1);
@@ -27,31 +27,29 @@ namespace osu_mania_bot
                         scores[scores.Count(s => s != null)] = strings[i];
                     }
                 }
-
                 int n = rand.Next(0, scores.Count(s => s != null) - 1);
-                string map_id = scores[n].Replace("\n", "");
-                string pp97 = scores[n].Remove(scores[n].LastIndexOf(','));
-                string pp95 = pp97.Remove(pp97.LastIndexOf(','));
+                string map_id = scores[n];
+                string pp98 = scores[n].Remove(scores[n].LastIndexOf(','));
+                string pp95 = pp98.Remove(pp98.LastIndexOf(','));
                 string pp92 = pp95.Remove(pp95.LastIndexOf(','));
-                pp92 = pp92.Replace("\n", "");
                 pp95 = pp95.Substring(pp95.LastIndexOf(',')+1);
-                pp97 = pp97.Substring(pp97.LastIndexOf(',')+1);
+                pp98 = pp98.Substring(pp98.LastIndexOf(',')+1);
                 map_id = map_id.Substring(map_id.LastIndexOf(',') + 1);
                 
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_beatmaps?k={_api}&b={map_id}");
+                RestRequest request = new RestRequest($"get_beatmaps?k={_api}&b={map_id}&m=3");
                 IRestResponse response = client.Execute(request);
                 string result = response.Content;
                 Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1,result.Length-2));
 
-                string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title}]  92%: {pp92}pp, 95%: {pp95}pp, 97%: {pp97}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.',',')),2)}*";
+                string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title}]  92%: {pp92}pp, 95%: {pp95}pp, 97%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.',',')),2)}*";
                 return output;
             }
             catch(Exception ex)
             {
                 Log.Write(ex.ToString());
                 Console.WriteLine(ex);
-                return "Error occured";
+                return "Error occured.";
             }
 
         }

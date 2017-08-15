@@ -10,8 +10,8 @@ namespace osu_mania_bot
 
         public static void OnQueryMessage(object sender, IrcEventArgs e)
         {
-            Log.Write("Recieved Query: " + e.Data.RawMessage);
-            Console.WriteLine("PM from " + e.Data.Nick + ": " + e.Data.Message);
+            Log.Write("Query: " + e.Data.RawMessage);
+            Console.WriteLine(e.Data.Nick + ": " + e.Data.Message);
             if (e.Data.Message.StartsWith("!r"))
             {
                 if (e.Data.Message == "!r")
@@ -40,14 +40,15 @@ namespace osu_mania_bot
         {
             if(!e.Data.RawMessage.Contains("QUIT") && !e.Data.RawMessage.Contains("JOIN") && e.Data.RawMessage != null && !e.Data.RawMessage.Contains("PRIVMSG"))
             {
-                Log.Write("Recieved: " + e.Data.RawMessage);
-                Console.WriteLine("Recieved" + e.Data.RawMessage);
+                Log.Write(e.Data.RawMessage);
+                Console.WriteLine(e.Data.RawMessage);
             }
             
         }
 
         static void Main(string[] args)
         {
+            Console.WriteLine(Data.GetMap(25,"4"));
             Log.Init();
             Console.Title = "osu!bot";
             irc.SendDelay = 200;

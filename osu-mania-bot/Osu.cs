@@ -6,7 +6,7 @@ namespace osu_mania_bot
 {
     class Osu
     {
-        private static string api = "Your osu! api key";
+        private static string api = "your osu! api key";
         private static Double _pp = 0;
 
         public static Double GetAveragePP(string username)
