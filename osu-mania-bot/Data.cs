@@ -8,7 +8,7 @@ namespace osu_mania_bot
 {
     class Data
     {
-        private static string _api = "your osu! api key";
+        private static string _api = "osu!api key";
         public static string GetMap(Double _pp, string _keys)
         {
             try
@@ -27,7 +27,7 @@ namespace osu_mania_bot
                         scores[scores.Count(s => s != null)] = strings[i];
                     }
                 }
-                int n = rand.Next(0, scores.Count(s => s != null) - 1);
+                int n = rand.Next(0, scores.Count(s => s != null && s!="\r\n" && s!="\r" && s!="\n") - 1);
                 string map_id = scores[n];
                 string pp98 = scores[n].Remove(scores[n].LastIndexOf(','));
                 string pp95 = pp98.Remove(pp98.LastIndexOf(','));
@@ -52,6 +52,30 @@ namespace osu_mania_bot
                 return "Error occured.";
             }
 
+        }
+
+        public static Double Calculate(Double od, Double stars, Double obj, Double acc)
+        {
+            try
+            {
+                Double strainMult = 1;
+                if (acc == 98) { strainMult = 0.95; }
+                else if (acc == 95) { strainMult = 0.85; }
+                else if (acc == 92) { strainMult = 0.65; }
+                Double StrainBase = (Math.Pow(5 * Math.Max(1, stars / 0.0825) - 4, 3) / 110000) * (1 + 0.1 * Math.Min(1, obj / 1500));
+                Double AccValue = Math.Pow(150 / od * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(Math.Pow(obj / 1500, 0.3), 1.15);
+                Double fo0 = Math.Pow(AccValue, 1.1);
+                Double fo1 = Math.Pow(StrainBase * strainMult, 1.1);
+                Double final_output = Math.Pow(fo0 + fo1, Math.Round(1 / 1.1, 2)) * 1.1;
+
+                return final_output;
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+                Log.Write($"Error: {ex}");
+                return -1;
+            }
         }
     }
     public class Beatmaps

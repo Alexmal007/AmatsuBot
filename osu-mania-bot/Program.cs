@@ -8,6 +8,54 @@ namespace osu_mania_bot
     {
         public static IrcClient irc = new IrcClient();
 
+        public static void OnQueryAction(object sender, ActionEventArgs e)
+        {
+            if (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/"))
+            {
+                try
+                {
+                    Console.WriteLine(e.Data.Nick + ": " + e.Data.Message);
+                    string map_id = e.Data.Message.Substring(e.Data.Message.IndexOf("sh/b/")+5);
+                    try
+                    {
+                        map_id = map_id.Remove(map_id.IndexOf(" "));
+                    }
+                    catch { }
+                    string pp92 = Osu.Calculate(92, map_id);
+                    string pp95 = Osu.Calculate(95, map_id);
+                    string pp98 = Osu.Calculate(98, map_id);
+                    if(pp92 == "Mode Error.")
+                    {
+                        Log.Write("Mode Error.");
+                        Console.WriteLine("Mode Error.");
+                        irc.SendMessage(SendType.Message,e.Data.Nick, "Error: Mania mode required. Can't work with converted maps atm.");
+                    }
+                    if (pp92 == "API Error occuried." || pp92 == "Error.")
+                    {
+                        Log.Write("Error occuried.");
+                        Console.WriteLine("Error occuried.");
+                        irc.SendMessage(SendType.Message, e.Data.Nick, "Error occuried.");
+                    }
+                    else
+                    {
+                        string output = $"92%: {pp92}pp | 95%: {pp95}pp | 98% {pp98}pp\n";
+                        Log.Write(output);
+                        Console.WriteLine(output);
+                        irc.SendMessage(SendType.Message, e.Data.Nick, output);
+                    }
+                    
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex);
+                    Log.Write("Error: " + ex);
+                    irc.SendMessage(SendType.Message, e.Data.Nick, "Error occuried.");
+                }
+            }
+
+        }
+
+
         public static void OnQueryMessage(object sender, IrcEventArgs e)
         {
             Log.Write("Query: " + e.Data.RawMessage);
@@ -27,6 +75,7 @@ namespace osu_mania_bot
                     irc.SendReply(e.Data, Data.GetMap(pp, "7"));
                 }
             }
+            
         }
 
         public static void OnError(object sender, ErrorEventArgs e)
@@ -38,7 +87,7 @@ namespace osu_mania_bot
 
         public static void OnRawMessage(object sender, IrcEventArgs e)
         {
-            if(!e.Data.RawMessage.Contains("QUIT") && !e.Data.RawMessage.Contains("JOIN") && e.Data.RawMessage != null && !e.Data.RawMessage.Contains("PRIVMSG"))
+            if(!e.Data.RawMessage.Contains("QUIT") && !e.Data.RawMessage.Contains("JOIN") && e.Data.RawMessage != null && !e.Data.RawMessage.Contains("PRIVMSG") && !e.Data.RawMessage.Contains("PING") && !e.Data.RawMessage.Contains("PONG"))
             {
                 Log.Write(e.Data.RawMessage);
                 Console.WriteLine(e.Data.RawMessage);
@@ -48,7 +97,6 @@ namespace osu_mania_bot
 
         static void Main(string[] args)
         {
-            Console.WriteLine(Data.GetMap(25,"4"));
             Log.Init();
             Console.Title = "osu!bot";
             irc.SendDelay = 200;
@@ -56,10 +104,11 @@ namespace osu_mania_bot
             irc.OnQueryMessage += new IrcEventHandler(OnQueryMessage);
             irc.OnError += new ErrorEventHandler(OnError);
             irc.OnRawMessage += new IrcEventHandler(OnRawMessage);
+            irc.OnQueryAction += new ActionEventHandler(OnQueryAction);
             string server = "irc.ppy.sh";
             int port = 6667;
-            string username = "-A_l_e_x_m_a_L-";
-            string pass = "pass";
+            string username = "-_Alexmal_-";
+            string pass = "85d3d179";
             try
             {
                 irc.Connect(server, port);
@@ -81,7 +130,7 @@ namespace osu_mania_bot
                 
                 if (cmd.StartsWith("/test"))
                 {
-                    irc.SendMessage(SendType.Message, "-A_l_e_x_m_a_l-", "Test command initiated.");
+                    irc.SendMessage(SendType.Message, "-_Alexmal_-", "Test command initiated.");
                 }
 
                 if (cmd.StartsWith("/clear"))
@@ -92,6 +141,7 @@ namespace osu_mania_bot
         public static void Exit()
         {
             Console.WriteLine("Exiting...");
+            Log.Write("Exit.");
             Environment.Exit(0);
         }
 
