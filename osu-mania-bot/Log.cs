@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace osu_mania_bot
+namespace Amatsu
 {
     class Log
     {

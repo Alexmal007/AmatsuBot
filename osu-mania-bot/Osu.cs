@@ -2,17 +2,18 @@
 using RestSharp;
 using Newtonsoft.Json;
 
-namespace osu_mania_bot
+namespace Amatsu
 {
     class Osu
     {
-        private static string api = "osu!api key";
+        private static string api = "7a64ea6efd955698cc9a26999daf640504a319d4";
 
         public static Double GetAveragePP(string username)
         {
             Double _pp = 0;
             RestClient client = new RestClient("https://osu.ppy.sh/api");
             RestRequest request = new RestRequest($"/get_user_best?u={username}&k={api}&limit=10&m=3");
+            client.Timeout = 5000; request.Timeout = 5000;
             IRestResponse response = client.Execute(request);
             string result = response.Content;
             if (result.Length > 2 && !result.Contains("error"))
@@ -31,25 +32,10 @@ namespace osu_mania_bot
             }
         }
 
-        public static string Calculate(Double acc, string map_id)
+        public static string Calculate(Double acc, Double obj, Double stars, Double od)
         {
             try
             {
-                RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_beatmaps?k={api}&b={map_id}");
-                IRestResponse response = client.Execute(request);
-                string result = response.Content;
-                if (result.Length > 2)
-                {
-                    Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
-                    if(btm.mode != "3")
-                    {
-                        string str = "Mode Error.";
-                        return str;
-                    }
-                    Double od = Convert.ToDouble(btm.diff_overall);
-                    Double stars = Convert.ToDouble(btm.difficultyrating.Replace('.',','));
-                    Double obj = Convert.ToDouble(combo(map_id));
                     Double strainMult = 1;
                     if (acc == 98) { strainMult = 0.95; }
                     else if (acc == 95) { strainMult = 0.85; }
@@ -62,11 +48,6 @@ namespace osu_mania_bot
 
                     string output = Convert.ToString(final_output);
                     return output;
-                }
-                else
-                {
-                    return "API Error occuried.";
-                }
             }
             catch (Exception ex)
             {
@@ -76,7 +57,7 @@ namespace osu_mania_bot
             }
         }
 
-        private static string combo(string map_id)
+        public static string combo(string map_id)
         {
             try
             {
@@ -104,7 +85,36 @@ namespace osu_mania_bot
         }
 
     }
+    public class MapInfo
+    {
+        private string api = "7a64ea6efd955698cc9a26999daf640504a319d4";
+        public static Double od { get; set; }
+        public static Double obj { get; set; }
+        public static Double stars { get; set; }
+        public MapInfo(string map_id)
+        {
+            try
+            {
+                RestClient client = new RestClient("https://osu.ppy.sh/api/");
+                RestRequest request = new RestRequest($"get_beatmaps?b={map_id}&k={api}");
+                request.Timeout = 5000; client.Timeout = 5000;
+                IRestResponse response = client.Execute(request);
+                string result = response.Content;
+                if (result.Length > 2)
+                {
+                    Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1,result.Length-2));
+                    od = Convert.ToDouble(btm.diff_overall.Replace('.',','));
+                    obj = Convert.ToDouble(Osu.combo(map_id));
+                    stars = Convert.ToDouble(btm.difficultyrating.Replace('.',','));
+                }
+                else
+                {
 
+                }
+            }
+            catch{ }
+        }
+    }
     public class UserBest
     {
         public string beatmap_id { get; set; }

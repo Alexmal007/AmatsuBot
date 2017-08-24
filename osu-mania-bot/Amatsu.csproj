@@ -6,8 +6,8 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{D89D6CEC-0E70-45FD-84C6-483BD7718538}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>osu_mania_bot</RootNamespace>
-    <AssemblyName>osu-mania-bot</AssemblyName>
+    <RootNamespace>Amatsu</RootNamespace>
+    <AssemblyName>Amatsu</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

@@ -4,11 +4,11 @@ using System.IO;
 using RestSharp;
 using Newtonsoft.Json;
 
-namespace osu_mania_bot
+namespace Amatsu
 {
     class Data
     {
-        private static string _api = "osu!api key";
+        private static string _api = "7a64ea6efd955698cc9a26999daf640504a319d4";
         public static string GetMap(Double _pp, string _keys)
         {
             try
@@ -38,7 +38,9 @@ namespace osu_mania_bot
                 
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
                 RestRequest request = new RestRequest($"get_beatmaps?k={_api}&b={map_id}&m=3");
+                client.Timeout = 5000; request.Timeout = 5000;
                 IRestResponse response = client.Execute(request);
+
                 string result = response.Content;
                 Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1,result.Length-2));
 

@@ -1,8 +1,9 @@
 ﻿using System;   
 using System.Threading;
 using Meebey.SmartIrc4net;
+using System.Text;
 
-namespace osu_mania_bot
+namespace Amatsu
 {
     class Program
     {
@@ -19,31 +20,10 @@ namespace osu_mania_bot
                     try
                     {
                         map_id = map_id.Remove(map_id.IndexOf(" "));
+                        if(map_id.Contains("?"))
+                            map_id = map_id.Remove(map_id.IndexOf("?"));
                     }
-                    catch { }
-                    string pp92 = Osu.Calculate(92, map_id);
-                    string pp95 = Osu.Calculate(95, map_id);
-                    string pp98 = Osu.Calculate(98, map_id);
-                    if(pp92 == "Mode Error.")
-                    {
-                        Log.Write("Mode Error.");
-                        Console.WriteLine("Mode Error.");
-                        irc.SendMessage(SendType.Message,e.Data.Nick, "Error: Mania mode required. Can't work with converted maps atm.");
-                    }
-                    if (pp92 == "API Error occuried." || pp92 == "Error.")
-                    {
-                        Log.Write("Error occuried.");
-                        Console.WriteLine("Error occuried.");
-                        irc.SendMessage(SendType.Message, e.Data.Nick, "Error occuried.");
-                    }
-                    else
-                    {
-                        string output = $"92%: {pp92}pp | 95%: {pp95}pp | 98% {pp98}pp\n";
-                        Log.Write(output);
-                        Console.WriteLine(output);
-                        irc.SendMessage(SendType.Message, e.Data.Nick, output);
-                    }
-                    
+                    catch { }                 
                 }
                 catch (Exception ex)
                 {
@@ -97,8 +77,9 @@ namespace osu_mania_bot
 
         static void Main(string[] args)
         {
+            irc.Encoding = Encoding.UTF8;
             Log.Init();
-            Console.Title = "osu!bot";
+            Console.Title = "Amatsu!";
             irc.SendDelay = 200;
             irc.ActiveChannelSyncing = true;
             irc.OnQueryMessage += new IrcEventHandler(OnQueryMessage);
@@ -118,7 +99,7 @@ namespace osu_mania_bot
             }
             catch (ConnectionException e)
             {
-                Console.WriteLine("couldn't connect! Reason: " + e.Message);
+                Console.WriteLine("Couldn't connect! Reason: " + e.Message);
                 Console.ReadLine();
             }
         }

@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "osu-mania-bot", "osu-mania-bot\osu-mania-bot.csproj", "{D89D6CEC-0E70-45FD-84C6-483BD7718538}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Amatsu", "osu-mania-bot\Amatsu.csproj", "{D89D6CEC-0E70-45FD-84C6-483BD7718538}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
