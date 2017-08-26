@@ -24,5 +24,12 @@ namespace Amatsu
                 sw.WriteLine(DateTime.Now + ":  " + ThingToWrite);
             }
         }
+        public static void Report(string ThingToWrite)
+        {
+            using (StreamWriter sw = File.AppendText(_date + "_reportfile"))
+            {
+                sw.WriteLine(DateTime.Now + ":  " + ThingToWrite);
+            }
+        }
     }
 }

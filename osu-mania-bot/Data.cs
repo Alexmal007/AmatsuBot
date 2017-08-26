@@ -8,7 +8,7 @@ namespace Amatsu
 {
     class Data
     {
-        private static string _api = "7a64ea6efd955698cc9a26999daf640504a319d4";
+        private static string _api = "";
         public static string GetMap(Double _pp, string _keys)
         {
             try
@@ -68,14 +68,15 @@ namespace Amatsu
                 Double AccValue = Math.Pow(150 / od * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(Math.Pow(obj / 1500, 0.3), 1.15);
                 Double fo0 = Math.Pow(AccValue, 1.1);
                 Double fo1 = Math.Pow(StrainBase * strainMult, 1.1);
-                Double final_output = Math.Pow(fo0 + fo1, Math.Round(1 / 1.1, 2)) * 1.1;
-
+                Double final_output = Math.Round(Math.Pow(fo0 + fo1, Math.Round(1 / 1.1, 2)) * 1.1);
+                Log.Write($"(Data.Calculate) {final_output}");
                 return final_output;
             }
             catch(Exception ex)
             {
                 Console.WriteLine(ex);
                 Log.Write($"Error: {ex}");
+                Log.Write($"OD: {od} STARS: {stars} OBJECT COUNT: {obj}, ACC: {acc}");
                 return -1;
             }
         }

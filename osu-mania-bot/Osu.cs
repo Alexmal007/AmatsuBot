@@ -6,7 +6,7 @@ namespace Amatsu
 {
     class Osu
     {
-        private static string api = "7a64ea6efd955698cc9a26999daf640504a319d4";
+        private static string api = "";
 
         public static Double GetAveragePP(string username)
         {
@@ -87,10 +87,11 @@ namespace Amatsu
     }
     public class MapInfo
     {
-        private string api = "7a64ea6efd955698cc9a26999daf640504a319d4";
-        public static Double od { get; set; }
-        public static Double obj { get; set; }
-        public static Double stars { get; set; }
+        private string api = "";
+        public Double od { get; set; }
+        public Double obj { get; set; }
+        public Double stars { get; set; }
+        public string mode { get; set; }
         public MapInfo(string map_id)
         {
             try
@@ -106,13 +107,17 @@ namespace Amatsu
                     od = Convert.ToDouble(btm.diff_overall.Replace('.',','));
                     obj = Convert.ToDouble(Osu.combo(map_id));
                     stars = Convert.ToDouble(btm.difficultyrating.Replace('.',','));
+                    mode = btm.mode;
                 }
                 else
                 {
 
                 }
             }
-            catch{ }
+            catch(Exception ex)
+            {
+                Log.Write($"ERROR: {ex}");
+            }
         }
     }
     public class UserBest

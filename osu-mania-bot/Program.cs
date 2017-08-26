@@ -23,7 +23,11 @@ namespace Amatsu
                         if(map_id.Contains("?"))
                             map_id = map_id.Remove(map_id.IndexOf("?"));
                     }
-                    catch { }                 
+                    catch { }
+                    MapInfo m = new MapInfo(map_id);
+                    if (m.mode == "3")
+                        irc.SendMessage(SendType.Message, e.Data.Nick, $"Map info: 92%: {Data.Calculate(m.od, m.stars, m.obj, 92)}pp | 95%: {Data.Calculate(m.od, m.stars, m.obj, 95)}pp | 98%: {Data.Calculate(m.od, m.stars, m.obj, 98)}pp");
+                    else irc.SendMessage(SendType.Message, e.Data.Nick, "Mania mode requiered.");
                 }
                 catch (Exception ex)
                 {
@@ -54,6 +58,14 @@ namespace Amatsu
                     Double pp = Osu.GetAveragePP(e.Data.Nick);
                     irc.SendReply(e.Data, Data.GetMap(pp, "7"));
                 }
+            }
+            if (e.Data.Message.StartsWith("!helpmeplz"))
+            {
+                Log.Write("===================REPORT====================");
+                Log.Write(e.Data.RawMessage);
+                Log.Write("===================REPORT====================");
+                Log.Report(e.Data.RawMessage);
+                irc.SendReply(e.Data, "Report sent. Thanks for help!");
             }
             
         }
@@ -89,7 +101,7 @@ namespace Amatsu
             string server = "irc.ppy.sh";
             int port = 6667;
             string username = "-_Alexmal_-";
-            string pass = "85d3d179";
+            string pass = "pass";
             try
             {
                 irc.Connect(server, port);
