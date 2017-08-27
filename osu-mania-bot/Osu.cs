@@ -6,7 +6,7 @@ namespace Amatsu
 {
     class Osu
     {
-        private static string api = "";
+        private static string api = "Your osu!api key";
 
         public static Double GetAveragePP(string username)
         {
@@ -87,7 +87,7 @@ namespace Amatsu
     }
     public class MapInfo
     {
-        private string api = "";
+        private string api = "Your osu!api key";
         public Double od { get; set; }
         public Double obj { get; set; }
         public Double stars { get; set; }

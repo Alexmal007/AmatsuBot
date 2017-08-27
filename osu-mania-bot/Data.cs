@@ -8,7 +8,7 @@ namespace Amatsu
 {
     class Data
     {
-        private static string _api = "";
+        private static string _api = "Your osu!api key.";
         public static string GetMap(Double _pp, string _keys)
         {
             try
