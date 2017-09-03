@@ -9,19 +9,46 @@ namespace Amatsu
 {
     class Data
     {
-        private static string _api = "You osu!api key";
+        private static string _api = "Your api key";
+        public static void LoadSettings()
+        {
+            try
+            {
+                var reader = new StreamReader("account.txt");
+                List<string> data = new List<string>();
+                data = reader.ReadToEnd().Split('\n').ToList();
+                _api = data[0].Substring(data[0].IndexOf(':') + 1).Replace("\r","");
+                Osu.api = _api;
+                MapInfo.api = _api;
+                Program.username = data[1].Substring(data[1].IndexOf(':') + 1).Replace("\r", "");
+                Program.password = data[2].Substring(data[2].IndexOf(':') + 1).Replace("\r", "");
+                reader.Close();
+                data.Clear();
+            }
+            catch(FileNotFoundException ex)
+            {
+                Log.Write($"{ex}");
+                var writer = new StreamWriter("account.txt");
+                writer.WriteLine("Your osu!api key (osu.ppy.sh/p/api):1234567\r\nYour username (osu.ppy.sh/p/irc):-_Alexmal_-\r\nYour password (osu.ppy.sh/p/irc):my_password");
+                writer.Close();
+                LoadSettings();
+                Console.WriteLine("Please, edit accounts.txt with your account settings.");
+            }
+        }
         public static string GetMap(Double _pp, string _keys)
         {
             try
             {
-                Random rand = new Random();
-                Double formula = _pp / 10;
+                var rand = new Random();
+                Double formula = _pp / 20;
                 StreamReader reader = new StreamReader(_keys + "keys.txt");
                 string[] strings = reader.ReadToEnd().Split('\n');
+                reader.Close();
                 List<string> scores = new List<string>();
                 for (int i = 0; i < strings.Length - 1; i++)
                 {
                     string score = strings[i].Substring(strings[i].IndexOf(',')+1);
+                    score = score = score.Substring(score.IndexOf(',')+1);
                     score = score.Remove(score.IndexOf(','));
                     if(Convert.ToDouble(score)>=_pp-formula && Convert.ToDouble(score) <= _pp + formula && score !=null)
                     {
@@ -47,7 +74,7 @@ namespace Amatsu
                 {
                     Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
 
-                    string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title}]  92%: {pp92}pp, 95%: {pp95}pp, 97%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
+                    string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
                     return output;
                 }
                 else
@@ -115,44 +142,5 @@ namespace Amatsu
             }
         }
     }
-    public class Beatmaps
-    {
-        public string beatmapset_id { get; set; }
-        public string beatmap_id { get; set; }
-        public string approved { get; set; }
-        public string total_length { get; set; }
-        public string hit_length { get; set; }
-        public string version { get; set; }
-        public string file_md5 { get; set; }
-        public string diff_size { get; set; }
-        public string diff_overall { get; set; }
-        public string diff_approach { get; set; }
-        public string diff_drain { get; set; }
-        public string mode { get; set; }
-        public object approved_date { get; set; }
-        public string last_update { get; set; }
-        public string artist { get; set; }
-        public string title { get; set; }
-        public string creator { get; set; }
-        public string bpm { get; set; }
-        public string source { get; set; }
-        public string tags { get; set; }
-        public string genre_id { get; set; }
-        public string language_id { get; set; }
-        public string favourite_count { get; set; }
-        public string playcount { get; set; }
-        public string passcount { get; set; }
-        public string max_combo { get; set; }
-        public string difficultyrating { get; set; }
-    }
-
-    class Dialog
-    {
-        public string username { get; set; }
-        public string last_map { get; set; }
-        public Dialog(string username, string last_map)
-        {
-
-        }
-    }
+    
 }

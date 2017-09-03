@@ -19,17 +19,17 @@ namespace Amatsu
 
         public static void Write(string ThingToWrite)
         {
-            using (StreamWriter sw = File.AppendText(_date + "_logfile"))
-            {
-                sw.WriteLine(DateTime.Now + ":  " + ThingToWrite);
-            }
+            var logText = new StringBuilder();
+            logText.Append($"{DateTime.Now}: {ThingToWrite}\r\n");
+            File.AppendAllText(_date + "_logfile", logText.ToString());
+            logText.Clear();
         }
         public static void Report(string ThingToWrite)
         {
-            using (StreamWriter sw = File.AppendText(_date + "_reportfile"))
-            {
-                sw.WriteLine(DateTime.Now + ":  " + ThingToWrite);
-            }
+            var logText = new StringBuilder();
+            logText.Append($"{DateTime.Now}: {ThingToWrite}\r\n");
+            File.AppendAllText(_date + "_reportfile", logText.ToString());
+            logText.Clear();
         }
     }
 }

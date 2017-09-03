@@ -10,20 +10,27 @@ namespace Amatsu
     {
         public static IrcClient irc = new IrcClient();
         public static List<string> users = new List<string>();
-        public static string[] last_map = new string[2048];
+        public static List<string> last_map = new List<string>();
+        public static string password = null;
+        public static string username = null;
         public static bool _r = true;
         public static bool _np = true;
         public static bool _acc = true;
 
+        // Here we catch user's /np
         public static void OnQueryAction(object sender, ActionEventArgs e)
         {
+
             Log.Write(e.Data.RawMessage);
+            Console.WriteLine(e.Data.Message);
+            //check if this command is enabled
             if (_np)
             {
-                if (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/"))
+                if (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/") || e.Data.RawMessage.Contains("http://osu.ppy.sh/b/"))
                 {
                     try
                     {
+                        //we need this to check if the user is in the list (we need it for !acc command) 
                         bool checkpoint = false;
                         Console.WriteLine(e.Data.Nick + ": " + e.Data.Message);
                         string map_id = e.Data.Message.Substring(e.Data.Message.IndexOf("sh/b/") + 5);
@@ -35,7 +42,9 @@ namespace Amatsu
                         }
                         catch { }
 
+                        Console.WriteLine("Map ID: " + map_id);
                         
+                        //here we check if the user is in ther list and set map for him if needed
                         for (int i = 0; i < users.Count; i++)
                         {
                             if (users[i] == (e.Data.Nick))
@@ -45,17 +54,26 @@ namespace Amatsu
                             }
                         }
 
+                        //if the user wasn't found in list
                         if (checkpoint == false)
                         {
                             users.Add(e.Data.Nick);
-                            users.Add(map_id);
+                            last_map.Add(map_id);
                         }
 
-                        
-                        MapInfo m = new MapInfo(map_id);
+                        var m = new MapInfo(map_id);
                         if (m.mode == "3")
-                            irc.SendMessage(SendType.Message, e.Data.Nick, $"Map info: 92%: {Data.Calculate(m.od, m.stars, m.obj, 92)}pp | 95%: {Data.Calculate(m.od, m.stars, m.obj, 95)}pp | 98%: {Data.Calculate(m.od, m.stars, m.obj, 98)}pp");
-                        else irc.SendMessage(SendType.Message, e.Data.Nick, "Mania mode requiered.");
+                        {
+                            var output = $"{m.artist} - {m.title} [{m.version}] | 92%: {Data.Calculate(m.od, m.stars, m.obj, 92)}pp | 95%: {Data.Calculate(m.od, m.stars, m.obj, 95)}pp | 98%: {Data.Calculate(m.od, m.stars, m.obj, 98)}pp";
+                            Log.Write(output);
+                            irc.SendMessage(SendType.Message, e.Data.Nick, output);
+                        }
+                        else
+                        {
+                            irc.SendMessage(SendType.Message, e.Data.Nick, "Mania mode requiered.");
+                            Log.Write("Mania mode requiered. m.mode = " + m.mode);
+                        }
+                    
                     }
                     catch (Exception ex)
                     {
@@ -67,36 +85,49 @@ namespace Amatsu
             }
         }
 
+        //here we recieve all pm commands
         public static void OnQueryMessage(object sender, IrcEventArgs e)
         {
+            var message = e.Data.Message.ToLower();
             try {
                 Log.Write("Query: " + e.Data.RawMessage);
-                Console.WriteLine(e.Data.Nick + ": " + e.Data.Message);
-                if (e.Data.Message.StartsWith("!r"))
+                Console.WriteLine(e.Data.Nick + ": " + message);
+
+                if (message.StartsWith("!r"))
                 {
                     if (_r)
                     {
-                        if (e.Data.Message == "!r")
+                        if (message == "!r")
                             irc.SendReply(e.Data, "This command sends you a map recommendation. Works with 4 and 7 keys atm. Example: !r 4");
-                        if (e.Data.Message.Contains("!r 4"))
+                        if (message.Contains("!r 4"))
                         {
                             Double pp = Osu.GetAveragePP(e.Data.Nick);
-                            irc.SendReply(e.Data, Data.GetMap(pp, "4"));
-                            Console.WriteLine(".");
+                            Log.Write($"{pp}");
+                            var get_map = Data.GetMap(pp, "4");
+                            Log.Write(get_map);
+                            irc.SendReply(e.Data, get_map);
+                            Console.WriteLine("~");
                         }
-                        else if (e.Data.Message.Contains("!r 7"))
+                        else if (message.Contains("!r 7"))
                         {
                             Double pp = Osu.GetAveragePP(e.Data.Nick);
-                            irc.SendReply(e.Data, Data.GetMap(pp, "7"));
+                            Log.Write($"{pp}");
+                            var get_map = Data.GetMap(pp, "7");
+                            Log.Write(get_map);
+                            irc.SendReply(e.Data, get_map);
                             Console.WriteLine(".");
                         }
-                        else
+                        else 
                         {
+                            if(message != "!r")
                             irc.SendReply(e.Data, "Currently works with 4 and 7 only.");
+                            Log.Write("Keys error.");
                         }
                     }
                 }
-                if (e.Data.Message.StartsWith("!helpmeplz"))
+
+                //secret command :)
+                if (message.StartsWith("!helpmeplz"))
                 {
                     Log.Write("===================REPORT====================");
                     Log.Write(e.Data.RawMessage);
@@ -104,17 +135,20 @@ namespace Amatsu
                     Log.Report(e.Data.RawMessage);
                     irc.SendReply(e.Data, "Report sent. Thanks for help!");
                 }
-                if (e.Data.Message.StartsWith("!acc"))
+
+                if (message.StartsWith("!acc"))
                 {
-                    string[] args = e.Data.Message.Substring(e.Data.Message.IndexOf(" ")+1).Split(' ');
-                    if (args.Length!=2)
-                    {
-                        irc.SendReply(e.Data, "Too few arguments. Example: !acc 96,12 1234567");
-                        return;
-                    }
                     if (_acc)
                     {
+                        string[] args = message.Substring(e.Data.Message.IndexOf(" ") + 1).Split(' ');
+                        if (args.Length != 2)
+                        {
+                            irc.SendReply(e.Data, "Too few arguments. Example: !acc 96,12 1234567");
+                            return;
+                        }
+
                         string map_id = null;
+                        //find user's /np
                         for (int i = 0; i < users.Count; i++)
                         {
                             if (users[i] == e.Data.Nick)
@@ -123,9 +157,9 @@ namespace Amatsu
                                 {
                                     map_id = last_map[i];
                                 }
-                                catch(ArgumentOutOfRangeException ex)
+                                catch (ArgumentOutOfRangeException ex)
                                 {
-                                    Log.Write(""+ex);
+                                    Log.Write("" + ex);
                                     Console.WriteLine("Error (ArgumentOutOfRangeException)");
                                     irc.SendReply(e.Data, "Send /np first.");
                                 }
@@ -137,7 +171,9 @@ namespace Amatsu
                         try
                         {
                             acc = Convert.ToDouble(args[0].Replace('.', ','));
+                            Log.Write($"{acc}");
                             score = Convert.ToDouble(args[1]);
+                            Log.Write($"{score}");
                             if (acc < 0 || acc > 100) acc = -1;
                             if (score < 0 || score > 1000000) acc = -1;
                         }
@@ -150,6 +186,7 @@ namespace Amatsu
                         }
                         if (acc == -1 || score == -1)
                         {
+                            Log.Write("Wrong input.");
                             irc.SendReply(e.Data, "Wrong input. Usage: !acc [acc] [score]");
                         }
                         else
@@ -157,16 +194,34 @@ namespace Amatsu
                             MapInfo m = new MapInfo(map_id);
                             if (m.mode == "3")
                             {
-                                string output = $"About {Data.Calculate(m.od, m.stars, m.obj, acc, score)}pp for {acc}%";
+                                string output = $"{m.artist} - {m.title} [{m.version}] | {Data.Calculate(m.od, m.stars, m.obj, acc, score)}pp for {acc}%";
+                                Log.Write(output);
                                 irc.SendReply(e.Data, output);
+                            }
+                            else if (m.mode == "0" || m.mode == "1" || m.mode == "2")
+                            {
+                                irc.SendReply(e.Data, "Mania mode required.");
+                                Log.Write("Error: (166) Wrong mode. ");
                             }
                             else
                             {
-                                irc.SendReply(e.Data, "Mania mode required.");
-                                Log.Write("Error: Wrong mode.");
+                                irc.SendReply(e.Data, "Connection error occuried. Please, try again.");
+                                Log.Write("Error: 171 m.mode is \"" + m.mode + "\"");
+                                Console.WriteLine("Connection error occuried. Please, try again.");
                             }
                         }
                     }
+   
+                }
+
+                if (message.StartsWith("~r"))
+                {
+                    Double pp = Osu.GetAveragePP("Full_Tablet");
+                    Log.Write($"{pp}");
+                    var get_map = Data.GetMap(pp, "4");
+                    Log.Write(get_map);
+                    irc.SendReply(e.Data, get_map);
+                    Console.WriteLine("~");
                 }
 
             }
@@ -194,23 +249,16 @@ namespace Amatsu
             
         }
 
-        static void Main(string[] args)
+        public static void OnDisconnected(object sender, EventArgs e)
         {
-            irc.Encoding = Encoding.UTF8;
-            Log.Init();
-            Console.Title = "Amatsu!";
-            irc.SendDelay = 200;
-            irc.ActiveChannelSyncing = true;
-            irc.OnQueryMessage += new IrcEventHandler(OnQueryMessage);
-            irc.OnError += new ErrorEventHandler(OnError);
-            irc.OnRawMessage += new IrcEventHandler(OnRawMessage);
-            irc.OnQueryAction += new ActionEventHandler(OnQueryAction);
-            string server = "irc.ppy.sh";
-            int port = 6667;
-            string username = "-_Alexmal_-";
-            string pass = "pass";
-            users.Add("-_Alexmal_-");
-            last_map[0] = "425725";
+            Console.WriteLine("Disconnected.");
+            Log.Write("Disconnected.");
+            Thread.Sleep(5000);
+            Connect(username, password);
+        }
+
+        public static void Connect(string username, string pass, int port = 6667, string server = "irc.ppy.sh")
+        {
             try
             {
                 irc.Connect(server, port);
@@ -218,11 +266,31 @@ namespace Amatsu
                 new Thread(new ThreadStart(ReadCommands)).Start();
                 irc.Listen();
             }
-            catch (ConnectionException e)
+            catch(ConnectionException ex)
             {
-                Console.WriteLine("Couldn't connect! Reason: " + e.Message);
-                Console.ReadLine();
+                Console.WriteLine("Couldn't connect, reason: " + ex);
+                Log.Write("Error: " + ex);
+                Thread.Sleep(10000);
+                Connect(username,pass);
             }
+        }
+        static void Main(string[] args)
+        {
+            irc.Encoding = Encoding.UTF8;
+            Log.Init();
+            Data.LoadSettings();
+            Log.Write(username);Log.Write(password);Log.Write(Osu.api);
+            Console.Title = "Amatsu!";
+            irc.SendDelay = 200;
+            irc.ActiveChannelSyncing = true;
+            irc.OnQueryMessage += new IrcEventHandler(OnQueryMessage);
+            irc.OnError += new ErrorEventHandler(OnError);
+            irc.OnRawMessage += new IrcEventHandler(OnRawMessage);
+            irc.OnQueryAction += new ActionEventHandler(OnQueryAction);
+            irc.OnDisconnected += new EventHandler(OnDisconnected);
+            users.Add("-_Alexmal_-");
+            last_map.Add("425725");
+            Connect(username,password);
         }
         public static void ReadCommands()
         {

@@ -6,7 +6,7 @@ namespace Amatsu
 {
     class Osu
     {
-        private static string api = "Your osu!api key";
+        public static string api = "Yor api key";
 
         public static Double GetAveragePP(string username)
         {
@@ -84,79 +84,6 @@ namespace Amatsu
             }
         }
 
-    }
-    public class MapInfo
-    {
-        private string api = "Your osu!api key";
-        public Double od { get; set; }
-        public Double obj { get; set; }
-        public Double stars { get; set; }
-        public string mode { get; set; }
-        public MapInfo(string map_id)
-        {
-            try
-            {
-                RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_beatmaps?b={map_id}&k={api}");
-                request.Timeout = 5000; client.Timeout = 5000;
-                IRestResponse response = client.Execute(request);
-                string result = response.Content;
-                if (result.Length > 2)
-                {
-                    Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1,result.Length-2));
-                    od = Convert.ToDouble(btm.diff_overall.Replace('.',','));
-                    obj = Convert.ToDouble(Osu.combo(map_id));
-                    stars = Convert.ToDouble(btm.difficultyrating.Replace('.',','));
-                    mode = btm.mode;
-                }
-                else
-                {
-
-                }
-            }
-            catch(Exception ex)
-            {
-                Log.Write($"ERROR: {ex}");
-            }
-        }
-    }
-    public class UserBest
-    {
-        public string beatmap_id { get; set; }
-        public string score { get; set; }
-        public string maxcombo { get; set; }
-        public string count50 { get; set; }
-        public string count100 { get; set; }
-        public string count300 { get; set; }
-        public string countmiss { get; set; }
-        public string countkatu { get; set; }
-        public string countgeki { get; set; }
-        public string perfect { get; set; }
-        public string enabled_mods { get; set; }
-        public string user_id { get; set; }
-        public string date { get; set; }
-        public string rank { get; set; }
-        public string pp { get; set; }
-    }
-
-    public class Scores
-    {
-        public string score_id { get; set; }
-        public string score { get; set; }
-        public string username { get; set; }
-        public string maxcombo { get; set; }
-        public string count50 { get; set; }
-        public string count100 { get; set; }
-        public string count300 { get; set; }
-        public string countmiss { get; set; }
-        public string countkatu { get; set; }
-        public string countgeki { get; set; }
-        public string perfect { get; set; }
-        public string enabled_mods { get; set; }
-        public string user_id { get; set; }
-        public string date { get; set; }
-        public string rank { get; set; }
-        public string pp { get; set; }
     }
 
 }
