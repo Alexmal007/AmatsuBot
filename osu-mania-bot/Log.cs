@@ -15,6 +15,7 @@ namespace Amatsu
         {
             Console.WriteLine("Initialization started...");
             _date = DateTime.Now.ToShortDateString().Replace('.', '-');
+            _date = _date.Replace('/','-');
         }
 
         public static void Write(string ThingToWrite)
