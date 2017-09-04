@@ -41,7 +41,7 @@ namespace Amatsu
                 foreach(string str in strings)
                 {
                     string score = str.Substring(str.IndexOf(',') + 1);
-                    score = score = score.Substring(score.IndexOf(',') + 1);
+                    score = score.Substring(score.IndexOf(',') + 1);
                     score = score.Remove(score.IndexOf(','));
                     if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && score != null)
                     {
