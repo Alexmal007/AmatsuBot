@@ -7,66 +7,62 @@ using System.Collections.Generic;
 
 namespace Amatsu
 {
-    class Data
+    static class Data
     {
-        private static string _api = "Your api key";
+        public static string ApiKey = "Your api key";
+
         public static void LoadSettings()
         {
             try
             {
-                var reader = new StreamReader("account.txt");
-                List<string> data = new List<string>();
-                data = reader.ReadToEnd().Split('\n').ToList();
-                _api = data[0].Substring(data[0].IndexOf(':') + 1).Replace("\r","");
-                Osu.api = _api;
-                MapInfo.api = _api;
-                Program.username = data[1].Substring(data[1].IndexOf(':') + 1).Replace("\r", "");
-                Program.password = data[2].Substring(data[2].IndexOf(':') + 1).Replace("\r", "");
-                reader.Close();
+                List<string> data = File.ReadLines("account.txt").ToList();
+                ApiKey = data[0].Split(':')[1].Replace("\r","");
+                Program.username = data[1].Split(':')[1].Replace("\r", "");
+                Program.password = data[2].Split(':')[1].Replace("\r", "");
                 data.Clear();
             }
-            catch(FileNotFoundException ex)
+            catch(FileNotFoundException ignore)
             {
-                Log.Write($"{ex}");
-                var writer = new StreamWriter("account.txt");
-                writer.WriteLine("Your osu!api key (osu.ppy.sh/p/api):1234567\r\nYour username (osu.ppy.sh/p/irc):-_Alexmal_-\r\nYour password (osu.ppy.sh/p/irc):my_password");
-                writer.Close();
+                File.WriteAllText("account.txt", "Your osu!api key (osu.ppy.sh/p/api):abcd1234\r\nYour username (osu.ppy.sh/p/irc):-_Alexmal_-\r\nYour password (osu.ppy.sh/p/irc):my_password");
                 LoadSettings();
                 Console.WriteLine("Please, edit accounts.txt with your account settings.");
             }
         }
+
         public static string GetMap(Double _pp, string _keys)
         {
             try
             {
                 var rand = new Random();
                 Double formula = _pp / 20;
-                StreamReader reader = new StreamReader(_keys + "keys.txt");
-                string[] strings = reader.ReadToEnd().Split('\n');
-                reader.Close();
+                string[] strings = File.ReadAllLines(_keys + "keys.txt");
                 List<string> scores = new List<string>();
-                for (int i = 0; i < strings.Length - 1; i++)
+
+                foreach(string str in strings)
                 {
-                    string score = strings[i].Substring(strings[i].IndexOf(',')+1);
-                    score = score = score.Substring(score.IndexOf(',')+1);
+                    string score = str.Substring(str.IndexOf(',') + 1);
+                    score = score = score.Substring(score.IndexOf(',') + 1);
                     score = score.Remove(score.IndexOf(','));
-                    if(Convert.ToDouble(score)>=_pp-formula && Convert.ToDouble(score) <= _pp + formula && score !=null)
+                    if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && score != null)
                     {
-                        scores.Add(strings[i]);
+                        scores.Add(str);
                     }
                 }
+
                 int n = rand.Next(0, scores.Count);
+
                 string map_id = scores[n];
                 string pp98 = scores[n].Remove(scores[n].LastIndexOf(','));
                 string pp95 = pp98.Remove(pp98.LastIndexOf(','));
                 string pp92 = pp95.Remove(pp95.LastIndexOf(','));
-                pp95 = pp95.Substring(pp95.LastIndexOf(',')+1);
-                pp98 = pp98.Substring(pp98.LastIndexOf(',')+1);
+                pp95 = pp95.Substring(pp95.LastIndexOf(',') + 1);
+                pp98 = pp98.Substring(pp98.LastIndexOf(',') + 1);
                 map_id = map_id.Substring(map_id.LastIndexOf(',') + 1);
                 
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_beatmaps?k={_api}&b={map_id}&m=3");
-                client.Timeout = 5000; request.Timeout = 5000;
+                RestRequest request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
+                client.Timeout = 5000;
+                request.Timeout = 5000;
                 IRestResponse response = client.Execute(request);
 
                 string result = response.Content;
@@ -97,9 +93,20 @@ namespace Amatsu
             {
                 od = 64 - (3 * od);
                 Double strainMult = 1;
-                if (acc == 98 && _scr == 0) { _scr = 900000; }
-                else if (acc == 95 && _scr == 0) { _scr = 800000; }
-                else if (acc == 92 && _scr == 0) { _scr = 700000; }
+
+                if (acc == 98 && _scr == 0)
+                {
+                    _scr = 900000;
+                }
+                else if (acc == 95 && _scr == 0)
+                {
+                    _scr = 800000;
+                }
+                else if (acc == 92 && _scr == 0)
+                {
+                    _scr = 700000;
+                }
+
                 if (_scr < 500000)
                 {
                     strainMult = _scr / 500000 * 0.1;
@@ -124,6 +131,7 @@ namespace Amatsu
                 {
                     strainMult = (_scr - 900000) / 100000 * 0.05 + 0.95;
                 }
+
                 Double StrainBase = (Math.Pow(5 * Math.Max(1, stars / 0.0825) - 4, 3) / 110000) * (1 + 0.1 * Math.Min(1, obj / 1500));
                 Double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16),1.8) * 2.5 * Math.Min(1.15,Math.Pow(obj / 1500, 0.3));
                 Double fo0 = Math.Pow(AccValue, 1.1);
@@ -142,5 +150,4 @@ namespace Amatsu
             }
         }
     }
-    
 }

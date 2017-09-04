@@ -6,14 +6,13 @@ namespace Amatsu
 {
     class Osu
     {
-        public static string api = "Yor api key";
-
         public static Double GetAveragePP(string username)
         {
             Double _pp = 0;
             RestClient client = new RestClient("https://osu.ppy.sh/api");
-            RestRequest request = new RestRequest($"/get_user_best?u={username}&k={api}&limit=10&m=3");
-            client.Timeout = 5000; request.Timeout = 5000;
+            RestRequest request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=10&m=3");
+            client.Timeout = 5000;
+            request.Timeout = 5000;
             IRestResponse response = client.Execute(request);
             string result = response.Content;
             if (result.Length > 2 && !result.Contains("error"))
@@ -57,13 +56,13 @@ namespace Amatsu
             }
         }
 
-        public static string combo(string map_id)
+        public static string Combo(string map_id)
         {
             try
             {
                 string max_combo;
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_scores?b={map_id}&k={api}&m=3&limit=1");
+                RestRequest request = new RestRequest($"get_scores?b={map_id}&k={Data.ApiKey}&m=3&limit=1");
                 IRestResponse response = client.Execute(request);
                 string result = response.Content;
                 if (result.Length > 2)

@@ -1,35 +1,32 @@
 ﻿using System;
 using System.IO;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Amatsu
 {
     class Log
     {
-        private static string _date {get;set;}
+        private static string _date {get; set;}
 
         public static void Init()
         {
             Console.WriteLine("Initialization started...");
-            _date = DateTime.Now.ToShortDateString().Replace('.', '-');
-            _date = _date.Replace('/','-');
+            _date = DateTime.Now.ToShortDateString().Replace('.', '-').Replace('/', '-');
         }
 
-        public static void Write(string ThingToWrite)
+        public static void Write(string thingToWrite)
         {
             var logText = new StringBuilder();
-            logText.Append($"{DateTime.Now}: {ThingToWrite}\r\n");
-            File.AppendAllText(_date + "_logfile", logText.ToString());
+            logText.Append($"{DateTime.Now}: {thingToWrite}\r\n");
+            File.AppendAllText(_date + "_logfile.log", logText.ToString());
             logText.Clear();
         }
-        public static void Report(string ThingToWrite)
+
+        public static void Report(string thingToWrite)
         {
             var logText = new StringBuilder();
-            logText.Append($"{DateTime.Now}: {ThingToWrite}\r\n");
-            File.AppendAllText(_date + "_reportfile", logText.ToString());
+            logText.Append($"{DateTime.Now}: {thingToWrite}\r\n");
+            File.AppendAllText(_date + "_reportfile.log", logText.ToString());
             logText.Clear();
         }
     }
