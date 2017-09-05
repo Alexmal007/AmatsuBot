@@ -10,6 +10,8 @@ namespace Amatsu
     static class Data
     {
         public static string ApiKey = "Your api key";
+        private static string[] _7keys = File.ReadAllLines("7keys.txt");
+        private static string[] _4keys = File.ReadAllLines("4keys.txt");
 
         public static void LoadSettings()
         {
@@ -20,6 +22,7 @@ namespace Amatsu
                 Program.username = data[1].Split(':')[1].Replace("\r", "");
                 Program.password = data[2].Split(':')[1].Replace("\r", "");
                 data.Clear();
+
             }
             catch(FileNotFoundException ignore)
             {
@@ -35,15 +38,17 @@ namespace Amatsu
             {
                 var rand = new Random();
                 Double formula = _pp / 20;
-                string[] strings = File.ReadAllLines(_keys + "keys.txt");
+                List<string> strings = new List<string>();
+                if (_keys == "7")
+                    strings = _7keys.ToList();
+                else if (_keys == "4")
+                    strings = _4keys.ToList();
                 List<string> scores = new List<string>();
 
                 foreach(string str in strings)
                 {
-                    string score = str.Substring(str.IndexOf(',') + 1);
-                    score = score.Substring(score.IndexOf(',') + 1);
-                    score = score.Remove(score.IndexOf(','));
-                    if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && score != null)
+                    string score = str.Split(',')[2];
+                    if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
                     {
                         scores.Add(str);
                     }
@@ -51,19 +56,17 @@ namespace Amatsu
 
                 int n = rand.Next(0, scores.Count);
 
-                string map_id = scores[n];
-                string pp98 = scores[n].Remove(scores[n].LastIndexOf(','));
-                string pp95 = pp98.Remove(pp98.LastIndexOf(','));
-                string pp92 = pp95.Remove(pp95.LastIndexOf(','));
-                pp95 = pp95.Substring(pp95.LastIndexOf(',') + 1);
-                pp98 = pp98.Substring(pp98.LastIndexOf(',') + 1);
-                map_id = map_id.Substring(map_id.LastIndexOf(',') + 1);
+                string map_id = scores[n].Split(',')[3];
+                string pp98 = scores[n].Split(',')[2];
+                string pp95 = scores[n].Split(',')[1];
+                string pp92 = scores[n].Split(',')[0];
                 
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
                 RestRequest request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
                 client.Timeout = 5000;
                 request.Timeout = 5000;
                 IRestResponse response = client.Execute(request);
+                scores.Clear();
 
                 string result = response.Content;
                 if (result.Length > 2)
