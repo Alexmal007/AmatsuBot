@@ -98,7 +98,7 @@ namespace Amatsu
                     {
                         Double pp = Osu.GetAveragePP(e.Data.Nick);
                         Log.Write($"{pp}");
-                        var get_map = Data.GetMap(pp, "4");
+                        var get_map = Data.GetMap(e.Data.Nick,pp, "4");
                         Log.Write(get_map);
                         irc.SendReply(e.Data, get_map);
                         Console.WriteLine("~");
@@ -107,7 +107,7 @@ namespace Amatsu
                     {
                         Double pp = Osu.GetAveragePP(e.Data.Nick);
                         Log.Write($"{pp}");
-                        var get_map = Data.GetMap(pp, "7");
+                        var get_map = Data.GetMap(e.Data.Nick, pp, "7");
                         Log.Write(get_map);
                         irc.SendReply(e.Data, get_map);
                         Console.WriteLine(".");

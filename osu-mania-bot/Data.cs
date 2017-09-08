@@ -9,6 +9,7 @@ namespace Amatsu
 {
     static class Data
     {
+        public static Dictionary<string, Player> Players = new Dictionary<string, Player>();
         public static string ApiKey = "Your api key";
         private static string[] _7keys = File.ReadAllLines("7keys.txt");
         private static string[] _4keys = File.ReadAllLines("4keys.txt");
@@ -32,7 +33,7 @@ namespace Amatsu
             }
         }
 
-        public static string GetMap(Double _pp, string _keys)
+        public static string GetMap(string username, Double _pp, string _keys)
         {
             try
             {
@@ -45,40 +46,63 @@ namespace Amatsu
                     strings = _4keys.ToList();
                 List<string> scores = new List<string>();
 
-                foreach(string str in strings)
+                if (!Players.ContainsKey(username))
                 {
-                    string score = str.Split(',')[2];
-                    if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                    foreach (string str in strings)
                     {
-                        scores.Add(str);
+                        string score = str.Split(',')[1];
+                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                        {
+                            scores.Add(str);
+                        }
                     }
+                    Players.Add(username,new Player(username,scores));
                 }
-
-                int n = rand.Next(0, scores.Count);
-
+                else if (Players[username].Scoreslist.Count == 0)
+                {
+                    foreach (string str in strings)
+                    {
+                        string score = str.Split(',')[1];
+                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                        {
+                            scores.Add(str);
+                        }
+                    }
+                    Players[username].Scoreslist = scores;
+                }
+                
+                int n = rand.Next(0, Players[username].Scoreslist.Count);
+                scores = Players[username].Scoreslist;
                 string map_id = scores[n].Split(',')[3];
                 string pp98 = scores[n].Split(',')[2];
                 string pp95 = scores[n].Split(',')[1];
                 string pp92 = scores[n].Split(',')[0];
-                
+                scores.RemoveAt(n);
+
                 RestClient client = new RestClient("https://osu.ppy.sh/api/");
                 RestRequest request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
                 client.Timeout = 5000;
                 request.Timeout = 5000;
                 IRestResponse response = client.Execute(request);
                 scores.Clear();
-
-                string result = response.Content;
-                if (result.Length > 2)
+                if (response.ResponseStatus != ResponseStatus.TimedOut)
                 {
-                    Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+                    string result = response.Content;
+                    if (result.Length > 2)
+                    {
+                        Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
 
-                    string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
-                    return output;
+                        string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
+                        return output;
+                    }
+                    else
+                    {
+                        return "Whoops! Looks like request failed. Try again.";
+                    }
                 }
                 else
                 {
-                    return "Timed out.";
+                    return "Timed Out.";
                 }
             }
             catch(Exception ex)

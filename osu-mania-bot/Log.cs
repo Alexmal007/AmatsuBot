@@ -18,7 +18,7 @@ namespace Amatsu
         {
             var logText = new StringBuilder();
             logText.Append($"{DateTime.Now}: {thingToWrite}\r\n");
-            File.AppendAllText(_date + "_logfile.log", logText.ToString());
+            File.AppendAllText(_date + ".log", logText.ToString());
             logText.Clear();
         }
 
@@ -26,7 +26,7 @@ namespace Amatsu
         {
             var logText = new StringBuilder();
             logText.Append($"{DateTime.Now}: {thingToWrite}\r\n");
-            File.AppendAllText(_date + "_reportfile.log", logText.ToString());
+            File.AppendAllText(_date + "_report.log", logText.ToString());
             logText.Clear();
         }
     }
