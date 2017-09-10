@@ -17,17 +17,14 @@ namespace Amatsu
         public static bool _np = true;
         public static bool _acc = true;
 
-        // Here we catch user's /np
         public static void OnQueryAction(object sender, ActionEventArgs e)
         {
             Log.Write(e.Data.RawMessage);
             Console.WriteLine(e.Data.Message);
-            //check if this command is enabled
             if (_np && (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/") || e.Data.RawMessage.Contains("http://osu.ppy.sh/b/")))
             {
                 try
                 {
-                    //we need this to check if the user is in the list (we need it for !acc command) 
                     bool checkpoint = false;
                     Console.WriteLine(e.Data.Nick + ": " + e.Data.Message);
                     string map_id = e.Data.Message.Substring(e.Data.Message.IndexOf("sh/b/") + 5);
@@ -39,7 +36,6 @@ namespace Amatsu
 
                     Console.WriteLine("Map ID: " + map_id);
 
-                    //here we check if the user is in ther list and set map for him if needed
                     for (int i = 0; i < users.Count; i++)
                     {
                         if (users[i] == (e.Data.Nick))
@@ -49,7 +45,6 @@ namespace Amatsu
                         }
                     }
 
-                    //if the user wasn't found in list
                     if (!checkpoint)
                     {
                         users.Add(e.Data.Nick);
@@ -80,134 +75,134 @@ namespace Amatsu
             }
         }
 
-        //here we recieve all pm commands
         public static void OnQueryMessage(object sender, IrcEventArgs e)
         {
-            var message = e.Data.Message.ToLower();
-
-            try
+            Console.WriteLine(e.Data.Nick + ":" + e.Data.Message);
+            Log.Write(e.Data.RawMessage);
+            if (e.Data.Message.StartsWith("!"))
             {
-                Log.Write("Query: " + e.Data.RawMessage);
-                Console.WriteLine(e.Data.Nick + ": " + message);
-
-                if (message.StartsWith("!r") && _r)
+                var command = e.Data.Message.ToLower().Split(' ');
+                
+                if (command[0] == "!r" && _r)
                 {
-                    if (message == "!r")
-                        irc.SendReply(e.Data, "This command sends you a map recommendation. Works with 4 and 7 keys atm. Example: !r 4");
-                    if (message.Contains("!r 4"))
+                    if (command.Length>1 && command[1] == "4")
                     {
                         Double pp = Osu.GetAveragePP(e.Data.Nick);
                         Log.Write($"{pp}");
-                        var get_map = Data.GetMap(e.Data.Nick,pp, "4");
-                        Log.Write(get_map);
-                        irc.SendReply(e.Data, get_map);
-                        Console.WriteLine("~");
-                    }
-                    else if (message.Contains("!r 7"))
-                    {
-                        Double pp = Osu.GetAveragePP(e.Data.Nick);
-                        Log.Write($"{pp}");
-                        var get_map = Data.GetMap(e.Data.Nick, pp, "7");
-                        Log.Write(get_map);
-                        irc.SendReply(e.Data, get_map);
-                        Console.WriteLine(".");
-                    }
-                    else
-                    {
-                        if (message != "!r")
-                            irc.SendReply(e.Data, "Currently works with 4 and 7 only.");
-
-                        Log.Write("Keys error.");
-                    }
-                } //secret command :)
-                else if (message.StartsWith("!helpmeplz"))
-                {
-                    Log.Write("===================REPORT====================");
-                    Log.Write(e.Data.RawMessage);
-                    Log.Write("===================REPORT====================");
-                    Log.Report(e.Data.RawMessage);
-                    irc.SendReply(e.Data, "Report sent. Thanks for help!");
-                }
-                else if (message.StartsWith("!acc") && _acc)
-                {
-                    string[] args = message.Substring(e.Data.Message.IndexOf(" ") + 1).Split(' ');
-                    if (args.Length != 2)
-                    {
-                        irc.SendReply(e.Data, "Too few arguments. Example: !acc 96,12 876159");
-                        return;
-                    }
-
-                    string map_id = null;
-                    //find user's /np
-                    for (int i = 0; i < users.Count; i++)
-                    {
-                        if (users[i] == e.Data.Nick)
+                        if (pp == -1)
                         {
-                            try
-                            {
-                                map_id = last_map[i];
-                            }
-                            catch (ArgumentOutOfRangeException ex)
-                            {
-                                Log.Write("" + ex);
-                                Console.WriteLine("Error (ArgumentOutOfRangeException)");
-                                irc.SendReply(e.Data, "Send /np first.");
-                            }
-                        }
-                    }
-
-                    Double acc;
-                    Double score;
-
-                    try
-                    {
-                        acc = Convert.ToDouble(args[0].Replace('.', ','));
-                        Log.Write($"{acc}");
-                        score = Convert.ToDouble(args[1]);
-                        Log.Write($"{score}");
-                        if (acc < 0 || acc > 100) acc = -1;
-                        if (score < 0 || score > 1000000) acc = -1;
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Write("Error: " + ex);
-                        Console.WriteLine(ex);
-                        acc = -1;
-                        score = -1;
-                    }
-
-                    if (acc == -1 || score == -1)
-                    {
-                        Log.Write("Wrong input.");
-                        irc.SendReply(e.Data, "Wrong input. Usage: !acc [acc] [score]");
-                    }
-                    else
-                    {
-                        MapInfo m = new MapInfo(map_id);
-                        if (m.mode == "3")
-                        {
-                            string output = $"{m.artist} - {m.title} [{m.version}] | {Data.Calculate(m.od, m.stars, m.obj, acc, score)}pp for {acc}%";
-                            Log.Write(output);
-                            irc.SendReply(e.Data, output);
-                        }
-                        else if (m.mode == "0" || m.mode == "1" || m.mode == "2")
-                        {
-                            irc.SendReply(e.Data, "Mania mode required.");
-                            Log.Write("Error: (166) Wrong mode.");
+                            irc.SendReply(e.Data, "Request failed, try again. Time for a break, maybe? :)");
                         }
                         else
                         {
-                            irc.SendReply(e.Data, "Please listen to mania song then do /np.");
-                            Log.Write("Error: 171 m.mode is \"" + m.mode + "\"");
-                            Console.WriteLine("Please listen to mania song then do /np.");
+                            var get_map = Data.GetMap(e.Data.Nick, pp, "4");
+                            Log.Write(get_map);
+                            irc.SendReply(e.Data, get_map);
+                            Console.WriteLine("~Reply sent.");
                         }
                     }
+                    else if (command.Length > 1 && command[1] == "7")
+                    {
+                        Double pp = Osu.GetAveragePP(e.Data.Nick);
+                        Log.Write($"{pp}");
+                        if (pp == -1)
+                        {
+                            irc.SendReply(e.Data, "Request failed, try again. Time for a break, maybe? :)");
+                        }
+                        else
+                        {
+                            var get_map = Data.GetMap(e.Data.Nick, pp, "7");
+                            Log.Write(get_map);
+                            irc.SendReply(e.Data, get_map);
+                            Console.WriteLine("~Reply sent.");
+                        }
+                    }
+                    else if (command.Length == 1)
+                    {
+                        Console.WriteLine("Too few arguments.");
+                        Log.Write("Too few arguments.");
+                        irc.SendReply(e.Data,"Too few aruments. Command usage: !r [keys]. Example: !r 4");
+                    }
+                    else
+                    {
+                        Log.Write("4 or 7 keys required.");
+                        irc.SendReply(e.Data, "Due to lack of maps I can only work with 4 and 7 keys right now.");
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                Log.Write("Error: " + ex);
-                Console.WriteLine(ex);
+                else if (command[0] == "!acc")
+                {
+                    if (command.Length == 3)
+                    {
+                        string map_id = null;
+                        for (int i = 0; i < users.Count; i++)
+                        {
+                            if (users[i] == e.Data.Nick)
+                            {
+                                try
+                                {
+                                    map_id = last_map[i];
+                                }
+                                catch (ArgumentOutOfRangeException ex)
+                                {
+                                    Log.Write("" + ex);
+                                    Console.WriteLine("Error (ArgumentOutOfRangeException)");
+                                    irc.SendReply(e.Data, "Send /np first. (map must be ranked)");
+                                }
+                            }
+                        }
+                        Double acc;
+                        Double score;
+                        try
+                        {
+                            acc = Convert.ToDouble(command[1].Replace('.', ','));
+                            Log.Write($"{acc}");
+                            score = Convert.ToDouble(command[2]);
+                            Log.Write($"{score}");
+                            if (acc < 0 || acc > 100) acc = -1;
+                            if (score < 0 || score > 1000000) acc = -1;
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Write("Error: " + ex);
+                            Console.WriteLine(ex);
+                            acc = -1;
+                            score = -1;
+                        }
+
+                        if (acc == -1 || score == -1)
+                        {
+                            Log.Write("Wrong input.");
+                            irc.SendReply(e.Data, "Wrong input. Usage: !acc [acc] [score]");
+                        }
+                        else
+                        {
+                            MapInfo m = new MapInfo(map_id);
+                            if (m.mode == "3")
+                            {
+                                string output = $"{m.artist} - {m.title} [{m.version}] | {Data.Calculate(m.od, m.stars, m.obj, acc, score)}pp for {acc}%";
+                                Log.Write(output);
+                                irc.SendReply(e.Data, output);
+                            }
+                            else if (m.mode == "0" || m.mode == "1" || m.mode == "2")
+                            {
+                                irc.SendReply(e.Data, "Mania mode required.");
+                                Log.Write("Error: (166) Wrong mode.");
+                            }
+                            else
+                            {
+                                irc.SendReply(e.Data, "Please, listen to mania song then do /np.");
+                                Log.Write("Error: 171 m.mode is \"" + m.mode + "\"");
+                                Console.WriteLine("Please, listen to mania song then do /np.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Log.Write("Too few arguments.");
+                        Console.WriteLine("Too few arguments.");
+                        irc.SendReply(e.Data, "Too few arguments. Usage: !acc [accuracy] [score]. Example: !acc 96.04 842098");
+                    }
+                }
             }
         }
 
