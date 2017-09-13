@@ -11,8 +11,8 @@ namespace Amatsu
     {
         public static Dictionary<string, Player> Players = new Dictionary<string, Player>();
         public static string ApiKey = "Your api key";
-        private static string[] _7keys = File.ReadAllLines("7keys.txt");
-        private static string[] _4keys = File.ReadAllLines("4keys.txt");
+        private static List<string> _7keys = File.ReadAllLines("7keys.txt").ToList();
+        private static List<string> _4keys = File.ReadAllLines("4keys.txt").ToList();
 
         public static void LoadSettings()
         {
@@ -41,9 +41,9 @@ namespace Amatsu
                 Double formula = _pp / 20;
                 List<string> strings = new List<string>();
                 if (_keys == "7")
-                    strings = _7keys.ToList();
+                    strings = _7keys;
                 else if (_keys == "4")
-                    strings = _4keys.ToList();
+                    strings = _4keys;
                 List<string> scores = new List<string>();
 
                 if (!Players.ContainsKey(username))
@@ -63,19 +63,19 @@ namespace Amatsu
                     foreach (string str in strings)
                     {
                         string score = str.Split(',')[1];
-                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula/2.5 && !string.IsNullOrWhiteSpace(score))
                         {
                             scores.Add(str);
                         }
                     }
                     Players[username].Scoreslist = scores;
                 }
-                
+
                 int n = rand.Next(0, Players[username].Scoreslist.Count);
                 scores = Players[username].Scoreslist;
                 string map_id = scores[n].Split(',')[3];
                 string pp98 = scores[n].Split(',')[2];
-                string pp95 = scores[n].Split(',')[1];
+                string pp95 = scores[n] .Split(',')[1];
                 string pp92 = scores[n].Split(',')[0];
                 scores.RemoveAt(n);
 
@@ -112,6 +112,86 @@ namespace Amatsu
                 return "Error occured.";
             }
 
+        }
+
+        public static string GetMapDiff(string username, Double difficulty, string keys)
+        {
+            try
+            {
+                var rand = new Random();
+                Double formula = 0.05 + difficulty/20;
+                List<string> strings = new List<string>();
+                if (keys == "7")
+                {
+                    strings = _7keys;
+                }
+                else if (keys == "4")
+                {
+                    strings = _4keys;
+                }
+                List<string> scores = new List<string>();
+                if (!Players.ContainsKey(username))
+                {
+                    foreach (string str in strings)
+                    {
+                        var star_rating = str.Split(',')[4].Replace('.', ',');
+                        if (Convert.ToDouble(star_rating) >= difficulty - formula && Convert.ToDouble(star_rating) <= difficulty + formula && !string.IsNullOrWhiteSpace(star_rating))
+                        {
+                            scores.Add(str);
+                        }
+                    }
+                    Players.Add(username, new Player(username, scores));
+                }
+                else if (Players[username].Scoreslist.Count == 0)
+                {
+                    foreach (string str in strings)
+                    {
+                        var star_rating = str.Split(',')[4].Replace('.', ',');
+                        if (Convert.ToDouble(star_rating) >= difficulty - formula && Convert.ToDouble(star_rating) <= difficulty + formula / 2.5 && !string.IsNullOrWhiteSpace(star_rating))
+                        {
+                            scores.Add(str);
+                        }
+                    }
+                    Players[username].Scoreslist = scores;
+                }
+                var n = rand.Next(0, scores.Count);
+                var map_id = scores[n].Split(',')[3];
+                var pp98 = scores[n].Split(',')[2];
+                var pp95 = scores[n].Split(',')[1];
+                var pp92 = scores[n].Split(',')[0];
+                scores.RemoveAt(n);
+                var client = new RestClient("https://osu.ppy.sh/api/");
+                var request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
+                client.Timeout = 5000;
+                request.Timeout = 5000;
+                var response = client.Execute(request);
+                scores.Clear();
+                if (response.ResponseStatus != ResponseStatus.TimedOut)
+                {
+                    string result = response.Content;
+                    if (result.Length > 2)
+                    {
+                        Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+
+                        var output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
+                        return output;
+                    }
+                    else
+                    {
+                        return "Whoops! Looks like request failed. Try again.";
+                    }
+                }
+                else
+                {
+                    return "Timed Out.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Write(ex.ToString());
+                Console.WriteLine(ex);
+                return "Error occured.";
+            }
         }
 
         public static Double Calculate(Double od, Double stars, Double obj, Double acc, Double _scr = 0)
