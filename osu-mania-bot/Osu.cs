@@ -83,21 +83,6 @@ namespace Amatsu
             }
         }
 
-        /*public static string GetKeys(string username)
-        {
-            var client = new RestClient("https://osu.ppy.sh/api/");
-            var request = new RestRequest($"get_userbest?k={Data.ApiKey}&m=3&limit=100");
-            var result = client.Execute(request).Content;
-            if (result.Length > 2)
-            {
-                var top_scores = JsonConvert.DeserializeObject<UserBest>(result);
-            }
-            else
-            {
-
-            }
-        }*/
-
     }
 
 }

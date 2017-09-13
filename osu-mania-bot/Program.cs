@@ -82,10 +82,10 @@ namespace Amatsu
             if (e.Data.Message.StartsWith("!"))
             {
                 var command = e.Data.Message.ToLower().Split(' ');
-
+                
                 if (command[0] == "!r" && _r)
                 {
-                    if (command.Length > 1 && command[1] == "4")
+                    if (command.Length>1 && command[1] == "4")
                     {
                         Double pp = Osu.GetAveragePP(e.Data.Nick);
                         Log.Write($"{pp}");
@@ -121,7 +121,7 @@ namespace Amatsu
                     {
                         Console.WriteLine("Too few arguments.");
                         Log.Write("Too few arguments.");
-                        irc.SendReply(e.Data, "Too few aruments. Command usage: !r [keys]. Example: !r 4");
+                        irc.SendReply(e.Data,"Too few aruments. Command usage: !r [keys]. Example: !r 4");
                     }
                     else
                     {
@@ -202,40 +202,6 @@ namespace Amatsu
                         Console.WriteLine("Too few arguments.");
                         irc.SendReply(e.Data, "Too few arguments. Usage: !acc [accuracy] [score]. Example: !acc 96.04 842098");
                     }
-                }
-                else if (command[0] == "!dif" || command[0] == "!diff")
-                {
-                    if (command.Length < 3)
-                    {
-                        Log.Write(e.Data.Nick + "// Too few arguments.");
-                        Console.WriteLine("Too few arguments.");
-                        irc.SendReply(e.Data, "Too few arguments. Usage: !diff [keys] [difficulty]. Example: !diff 4 3.55");
-                    }
-                    else if (command.Length >= 3)
-                    {
-                        var diff = Convert.ToDouble(command[2].Replace('.', ','));
-                        var keys = command[1];
-                        if (command[1] == "4" || command[1] == "7")
-                        {
-                            var get_map = Data.GetMapDiff(e.Data.Nick, diff, keys);
-                            Log.Write(get_map);
-                            irc.SendReply(e.Data, get_map);
-                            Console.WriteLine("~Reply sent.");
-                        }
-                        else
-                        {
-                            irc.SendReply(e.Data, "Works for 4 and 7 keys for now.");
-                        }
-
-                    }
-                }
-                else if (command[0] == "!help" || command[0] == "!info")
-                {
-                    irc.SendReply(e.Data, "Hello, I'm Amatsu! and I can do some cute things for you. Forum thread can be found [https://osu.ppy.sh/forum/t/637171 here], commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here]");
-                }
-                else
-                {
-                    irc.SendReply(e.Data, "Unknown command.");
                 }
             }
         }
