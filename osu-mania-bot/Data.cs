@@ -50,8 +50,9 @@ namespace Amatsu
                 {
                     foreach (string str in strings)
                     {
+                        Double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
                         string score = str.Split(',')[1];
-                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                        if (successRate > 0.36 && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
                         {
                             scores.Add(str);
                         }
@@ -62,11 +63,12 @@ namespace Amatsu
                 {
                     foreach (string str in strings)
                     {
-                        string score = str.Split(',')[1];
-                        if (Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula/2.5 && !string.IsNullOrWhiteSpace(score))
-                        {
-                            scores.Add(str);
-                        }
+                            Double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
+                            string score = str.Split(',')[1];
+                            if (successRate > 0.36 && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                            {
+                                scores.Add(str);
+                            }
                     }
                     Players[username].Scoreslist = scores;
                 }
@@ -148,6 +150,85 @@ namespace Amatsu
                     {
                         var star_rating = str.Split(',')[4].Replace('.', ',');
                         if (Convert.ToDouble(star_rating) >= difficulty - formula && Convert.ToDouble(star_rating) <= difficulty + formula / 2.5 && !string.IsNullOrWhiteSpace(star_rating))
+                        {
+                            scores.Add(str);
+                        }
+                    }
+                    Players[username].Scoreslist = scores;
+                }
+                var n = rand.Next(0, scores.Count);
+                var map_id = scores[n].Split(',')[3];
+                var pp98 = scores[n].Split(',')[2];
+                var pp95 = scores[n].Split(',')[1];
+                var pp92 = scores[n].Split(',')[0];
+                scores.RemoveAt(n);
+                var client = new RestClient("https://osu.ppy.sh/api/");
+                var request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
+                client.Timeout = 5000;
+                request.Timeout = 5000;
+                var response = client.Execute(request);
+                scores.Clear();
+                if (response.ResponseStatus != ResponseStatus.TimedOut)
+                {
+                    string result = response.Content;
+                    if (result.Length > 2)
+                    {
+                        Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+
+                        var output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
+                        return output;
+                    }
+                    else
+                    {
+                        return "Whoops! Looks like request failed. Try again.";
+                    }
+                }
+                else
+                {
+                    return "Timed Out.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Write(ex.ToString());
+                Console.WriteLine(ex);
+                return "Error occured.";
+            }
+        }
+
+        public static string GetMapMinMaxDiff(string username, Double minDifficulty, Double maxDifficulty, string keys)
+        {
+            try
+            {
+                var rand = new Random();
+                List<string> strings = new List<string>();
+                if (keys == "7")
+                {
+                    strings = _7keys;
+                }
+                else if (keys == "4")
+                {
+                    strings = _4keys;
+                }
+                List<string> scores = new List<string>();
+                if (!Players.ContainsKey(username))
+                {
+                    foreach (string str in strings)
+                    {
+                        var star_rating = str.Split(',')[4].Replace('.', ',');
+                        if (Convert.ToDouble(star_rating) >= minDifficulty && Convert.ToDouble(star_rating) <= maxDifficulty&& !string.IsNullOrWhiteSpace(star_rating))
+                        {
+                            scores.Add(str);
+                        }
+                    }
+                    Players.Add(username, new Player(username, scores));
+                }
+                else if (Players[username].Scoreslist.Count == 0)
+                {
+                    foreach (string str in strings)
+                    {
+                        var star_rating = str.Split(',')[4].Replace('.', ',');
+                        if (Convert.ToDouble(star_rating) >= minDifficulty && Convert.ToDouble(star_rating) <= maxDifficulty && !string.IsNullOrWhiteSpace(star_rating))
                         {
                             scores.Add(str);
                         }

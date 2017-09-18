@@ -87,8 +87,10 @@ namespace Amatsu
                 {
                     if (command.Length > 1 && command[1] == "4")
                     {
-                        Double pp = Osu.GetAveragePP(e.Data.Nick);
-                        Log.Write($"{pp}");
+                        var list = Osu.GetAveragePP(e.Data.Nick);
+                        var pp = list[0];
+                        var acc = list[1];
+                        Log.Write($"{pp} | {acc}");
                         if (pp == -1)
                         {
                             irc.SendReply(e.Data, "Request failed, try again. Time for a break, maybe? :)");
@@ -103,7 +105,7 @@ namespace Amatsu
                     }
                     else if (command.Length > 1 && command[1] == "7")
                     {
-                        Double pp = Osu.GetAveragePP(e.Data.Nick);
+                        var pp = Osu.GetAveragePP(e.Data.Nick)[0];
                         Log.Write($"{pp}");
                         if (pp == -1)
                         {
@@ -213,25 +215,46 @@ namespace Amatsu
                     }
                     else if (command.Length >= 3)
                     {
-                        var diff = Convert.ToDouble(command[2].Replace('.', ','));
-                        var keys = command[1];
-                        if (command[1] == "4" || command[1] == "7")
+                        try
                         {
-                            var get_map = Data.GetMapDiff(e.Data.Nick, diff, keys);
-                            Log.Write(get_map);
-                            irc.SendReply(e.Data, get_map);
-                            Console.WriteLine("~Reply sent.");
+                            var diff = Convert.ToDouble(command[2].Replace('.', ','));
+                            var keys = command[1];
+                            if (command[1] == "4" || command[1] == "7")
+                            {
+                                string get_map;
+                                if (command.Length == 3)
+                                {
+                                    get_map = Data.GetMapDiff(e.Data.Nick, diff, keys);
+                                }
+                                else
+                                {
+                                    var diff2 = Convert.ToDouble(command[3].Replace('.', ','));
+                                    get_map = Data.GetMapMinMaxDiff(e.Data.Nick, diff, diff2, command[1]);
+                                }
+                                Log.Write(get_map);
+                                irc.SendReply(e.Data, get_map);
+                                Console.WriteLine("~Reply sent.");
+                            }
+                            else
+                            {
+                                irc.SendReply(e.Data, "Works for 4 and 7 keys for now.");
+                            }
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            irc.SendReply(e.Data, "Works for 4 and 7 keys for now.");
+                            Log.Write($"ex");
+                            Console.WriteLine(ex);
+                            irc.SendReply(e.Data, "Error occuried. Wrong input?");
                         }
-
                     }
                 }
                 else if (command[0] == "!help" || command[0] == "!info")
                 {
                     irc.SendReply(e.Data, "Hello, I'm Amatsu! and I can do some cute things for you. Forum thread can be found [https://osu.ppy.sh/forum/t/637171 here], commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here]");
+                }
+                else if(command[0] == "!coffee")
+                {
+                    irc.SendReply(e.Data, "[https://youtu.be/SpiPD_Ti_Bg Держи^^]");
                 }
                 else
                 {

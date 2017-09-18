@@ -13,6 +13,7 @@ namespace Amatsu
         public string artist { get; set; }
         public string title { get; set; }
         public string version { get; set; }
+        public int keys { get; set; }
 
         public MapInfo(string map_id)
         {
@@ -34,6 +35,7 @@ namespace Amatsu
                     artist = btm.artist;
                     title = btm.title;
                     version = btm.version;
+                    keys = Convert.ToInt16(btm.diff_approach);
                 }
                 else
                 {

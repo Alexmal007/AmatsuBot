@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using RestSharp;
 using Newtonsoft.Json;
 
@@ -6,30 +7,51 @@ namespace Amatsu
 {
     class Osu
     {
-        public static Double GetAveragePP(string username)
+        public static List<Double> GetAveragePP(string username)
         {
-            Double _pp = 0;
-            RestClient client = new RestClient("https://osu.ppy.sh/api");
-            RestRequest request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=10&m=3");
-            client.Timeout = 5000;
-            request.Timeout = 5000;
-            IRestResponse response = client.Execute(request);
-            string result = response.Content;
-            if (result.Length > 2 && !result.Contains("error"))
+            try
             {
-                UserBest[] usb = JsonConvert.DeserializeObject<UserBest[]>(result);
-                for(int i = 0; i<usb.Length; i++)
+                Double pp = 0;
+                Double acc = 0;
+                RestClient client = new RestClient("https://osu.ppy.sh/api");
+                RestRequest request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=10&m=3");
+                client.Timeout = 5000;
+                request.Timeout = 5000;
+                IRestResponse response = client.Execute(request);
+                string result = response.Content;
+                if (result.Length > 2 && !result.Contains("error"))
                 {
-                    _pp = _pp + Convert.ToDouble(usb[i].pp.Replace('.',','));
+                    UserBest[] usb = JsonConvert.DeserializeObject<UserBest[]>(result);
+                    for (int i = 0; i < usb.Length; i++)
+                    {
+                        Double acc0 = (Convert.ToDouble(usb[i].count300) * 100 + Convert.ToDouble(usb[i].count100) * 33.333 + Convert.ToDouble(usb[i].count50) * 16.666 + Convert.ToDouble(usb[i].countmiss) * 0) / (Convert.ToDouble(usb[i].count300) + Convert.ToDouble(usb[i].count100) + Convert.ToDouble(usb[i].count50) + Convert.ToDouble(usb[i].countmiss));
+                        pp = pp + Convert.ToDouble(usb[i].pp.Replace('.', ','));
+                        acc = acc + acc0;
+                    }
+                    pp = pp / usb.Length;
+                    acc = acc / usb.Length;
+                    var output = new List<Double>();
+                    output.Add(pp);
+                    output.Add(acc);
+                    return output;
                 }
-                _pp = _pp / usb.Length;
-                return _pp;
+                else
+                {
+                    var output = new List<Double>();
+                    output.Add(-1);
+                    return output;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return -1;
+                Log.Write($"Error: {ex}");
+                Console.WriteLine(ex);
+                var output = new List<Double>();
+                output.Add(-1);
+                return output;
             }
         }
+
 
         public static string Calculate(Double acc, Double obj, Double stars, Double od)
         {
@@ -83,20 +105,48 @@ namespace Amatsu
             }
         }
 
-        /*public static string GetKeys(string username)
+        public static string GetKeys(string username)
         {
+            var keys4Count = 0;
+            var keys7Count = 0;
             var client = new RestClient("https://osu.ppy.sh/api/");
             var request = new RestRequest($"get_userbest?k={Data.ApiKey}&m=3&limit=100");
+            client.Timeout = 5000;
+            request.Timeout = 5000;
             var result = client.Execute(request).Content;
             if (result.Length > 2)
             {
-                var top_scores = JsonConvert.DeserializeObject<UserBest>(result);
+                var topScores = JsonConvert.DeserializeObject<UserBest[]>(result);
+                for (int i = 0; i < topScores.Length; i++)
+                {
+                    var mapInfo = new MapInfo(topScores[i].beatmap_id);
+                    if (mapInfo.keys == 4)
+                    {
+                        keys4Count++;
+                    }
+                    else if (mapInfo.keys == 7)
+                    {
+                        keys7Count++;
+                    }
+                }
+                if (keys4Count >= keys7Count)
+                {
+                    return $"{keys4Count}";
+                }
+                else if(keys4Count < keys7Count)
+                {
+                    return $"{keys7Count}";
+                }
+                else
+                {
+                    return "error";
+                }
             }
             else
             {
-
+                return "error";
             }
-        }*/
+        }
 
     }
 
