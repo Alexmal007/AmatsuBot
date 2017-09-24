@@ -39,6 +39,7 @@ namespace Amatsu
             {
                 var rand = new Random();
                 Double formula = _pp / 20;
+                Double successRateWindow = _pp / 100;
                 List<string> strings = new List<string>();
                 if (_keys == "7")
                     strings = _7keys;
@@ -52,25 +53,26 @@ namespace Amatsu
                     {
                         Double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
                         string score = str.Split(',')[1];
-                        if (successRate > 0.36 && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                        if (successRate + successRateWindow > 0.36 && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
                         {
                             scores.Add(str);
                         }
                     }
                     Players.Add(username,new Player(username,scores));
                 }
-                else if (Players[username].Scoreslist.Count == 0)
+                else if (Players[username].Scoreslist.Count < 3)
                 {
                     foreach (string str in strings)
                     {
                             Double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
                             string score = str.Split(',')[1];
-                            if (successRate > 0.36 && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
+                            if (successRate + successRateWindow > (0.32 - Players[username].SuccessRateMod * 2) && Convert.ToDouble(score) >= _pp - formula && Convert.ToDouble(score) <= _pp + formula && !string.IsNullOrWhiteSpace(score))
                             {
                                 scores.Add(str);
                             }
                     }
                     Players[username].Scoreslist = scores;
+                    Players[username].SuccessRateMod += 1;
                 }
 
                 int n = rand.Next(0, Players[username].Scoreslist.Count);
