@@ -107,44 +107,57 @@ namespace Amatsu
 
         public static string GetKeys(string username)
         {
-            var keys4Count = 0;
-            var keys7Count = 0;
-            var client = new RestClient("https://osu.ppy.sh/api/");
-            var request = new RestRequest($"get_userbest?k={Data.ApiKey}&m=3&limit=100");
-            client.Timeout = 5000;
-            request.Timeout = 5000;
-            var result = client.Execute(request).Content;
-            if (result.Length > 2)
+            try
             {
-                var topScores = JsonConvert.DeserializeObject<UserBest[]>(result);
-                for (int i = 0; i < topScores.Length; i++)
+                var keys4Count = 0;
+                var keys7Count = 0;
+                var client = new RestClient("https://osu.ppy.sh/api/");
+                var request = new RestRequest($"get_user_best?u={username}&k={Data.ApiKey}&m=3&limit=100");
+                client.Timeout = 5000;
+                request.Timeout = 5000;
+                var result = client.Execute(request).Content;
+                if (result.Length > 2)
                 {
-                    var mapInfo = new MapInfo(topScores[i].beatmap_id);
-                    if (mapInfo.keys == 4)
+                    var topScores = JsonConvert.DeserializeObject<UserBest[]>(result);
+                    for (int i = 0; i < topScores.Length; i++)
                     {
-                        keys4Count++;
+                        var mapInfo = new MapInfo(topScores[i].beatmap_id);
+                        if (mapInfo.keys == 4)
+                        {
+                            keys4Count++;
+                        }
+                        else if (mapInfo.keys == 7)
+                        {
+                            keys7Count++;
+                        }
                     }
-                    else if (mapInfo.keys == 7)
+                    if (keys4Count >= keys7Count)
                     {
-                        keys7Count++;
+                        return $"{keys4Count}";
                     }
-                }
-                if (keys4Count >= keys7Count)
-                {
-                    return $"{keys4Count}";
-                }
-                else if(keys4Count < keys7Count)
-                {
-                    return $"{keys7Count}";
+                    else if (keys4Count < keys7Count)
+                    {
+                        return $"{keys7Count}";
+                    }
+                    else
+                    {
+                        Console.WriteLine("Keys error.");
+                        Log.Write($"Keys error. Response length: {result.Length}, keys4Count: {keys4Count}, keys7Count: {keys7Count}.");
+                        return "Error occuried.";
+                    }
                 }
                 else
                 {
-                    return "error";
+                    Console.WriteLine($"Error occuried. Result length: {result.Length}.");
+                    Log.Write($"Error occuried. Result length: {result.Length}.");
+                    return "Error occuried.";
                 }
             }
-            else
+            catch (Exception ex)
             {
-                return "error";
+                Log.Write($"{ex}");
+                Console.WriteLine(ex);
+                return "Error occuried.";
             }
         }
 

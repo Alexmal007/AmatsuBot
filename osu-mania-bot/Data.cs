@@ -37,9 +37,19 @@ namespace Amatsu
         {
             try
             {
+                Double formula;
+                Double successRateWindow;
                 var rand = new Random();
-                Double formula = _pp / 20;
-                Double successRateWindow = _pp / 100;
+                if (_pp > 30)
+                {
+                    formula = _pp / 20;
+                    successRateWindow = _pp / 100;
+                }
+                else
+                {
+                    formula = 5;
+                    successRateWindow = 0;
+                }
                 List<string> strings = new List<string>();
                 if (_keys == "7")
                     strings = _7keys;
