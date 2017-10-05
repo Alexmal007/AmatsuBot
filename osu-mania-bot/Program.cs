@@ -13,15 +13,13 @@ namespace Amatsu
         public static List<string> last_map = new List<string>();
         public static string password = null;
         public static string username = null;
-        public static bool _r = true;
-        public static bool _np = true;
-        public static bool _acc = true;
+        private static string _announce = null;
 
         public static void OnQueryAction(object sender, ActionEventArgs e)
         {
             Log.Write(e.Data.RawMessage);
             Console.WriteLine(e.Data.Message);
-            if (_np && (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/") || e.Data.RawMessage.Contains("http://osu.ppy.sh/b/")))
+            if (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/") || e.Data.RawMessage.Contains("http://osu.ppy.sh/b/"))
             {
                 try
                 {
@@ -49,6 +47,10 @@ namespace Amatsu
                     {
                         users.Add(e.Data.Nick);
                         last_map.Add(map_id);
+                        if (_announce != null)
+                        {
+                            irc.SendReply(e.Data, _announce);
+                        }
                     }
 
                     var m = new MapInfo(map_id);
@@ -79,11 +81,19 @@ namespace Amatsu
         {
             Console.WriteLine(e.Data.Nick + ":" + e.Data.Message);
             Log.Write(e.Data.RawMessage);
+            if (!users.Contains(e.Data.Nick))
+            {
+                users.Add(e.Data.Nick);
+                if (_announce != null)
+                {
+                    irc.SendReply(e.Data, _announce);
+                }
+            }
             if (e.Data.Message.StartsWith("!"))
             {
                 var command = e.Data.Message.ToLower().Split(' ');
 
-                if (command[0] == "!r" && _r)
+                if (command[0] == "!r")
                 {
                     if (command.Length > 1 && command[1] == "4")
                     {
@@ -252,9 +262,13 @@ namespace Amatsu
                 {
                     irc.SendReply(e.Data, "Hello, I'm Amatsu! and I can do some cute things for you. Forum thread can be found [https://osu.ppy.sh/forum/t/637171 here], commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here]");
                 }
-                else if(command[0] == "!coffee")
+                else if (command[0] == "!coffee")
                 {
                     irc.SendReply(e.Data, "[https://youtu.be/SpiPD_Ti_Bg Держи^^]");
+                }
+                else if (command[0] == "!keys")
+                {
+                    irc.SendReply(e.Data, Osu.GetKeys(e.Data.Nick));
                 }
                 else
                 {
@@ -334,33 +348,39 @@ namespace Amatsu
 
         public static void ReadCommands()
         {
-            while (true)
+            try
             {
-                string cmd = Console.ReadLine();
+                while (true)
+                {
+                    string cmd = Console.ReadLine();
 
-                if (cmd.StartsWith("/test "))
-                {
-                    irc.SendMessage(SendType.Message, "-_Alexmal_-", "Test command initiated.");
+                    if (cmd.StartsWith("/test"))
+                    {
+                        irc.SendMessage(SendType.Message, "-_Alexmal_-", "Test command initiated.");
+                    }
+                    else if (cmd.StartsWith("/clear"))
+                    {
+                        Console.Clear();
+                    }
+
+                    if (cmd.StartsWith("/announce"))
+                    {
+                        try
+                        {
+                            _announce = cmd.Substring(cmd.IndexOf(' ') + 1);
+                            Console.WriteLine($"Set announce to \"{_announce}\"");
+                        }
+                        catch (Exception ex)
+                        {
+                            _announce = null;
+                            Console.WriteLine("_announce set to null.");
+                        }
+                    }
                 }
-                else if (cmd.StartsWith("/clear "))
-                {
-                    Console.Clear();
-                }
-                else if (cmd.StartsWith("/r "))
-                {
-                    _r = !_r;
-                    Console.WriteLine("Changed _r to " + _r);
-                }
-                else if (cmd.StartsWith("/acc "))
-                {
-                    _acc = !_acc;
-                    Console.WriteLine("Changed _acc to " + _acc);
-                }
-                else if (cmd.StartsWith("/np "))
-                {
-                    _np = !_np;
-                    Console.WriteLine("Changed _np to " + _np);
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
             }
         }
 
