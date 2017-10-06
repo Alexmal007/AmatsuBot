@@ -84,6 +84,7 @@ namespace Amatsu
             if (!users.Contains(e.Data.Nick))
             {
                 users.Add(e.Data.Nick);
+                last_map.Add("1023965");
                 if (_announce != null)
                 {
                     irc.SendReply(e.Data, _announce);
