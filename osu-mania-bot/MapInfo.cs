@@ -19,15 +19,15 @@ namespace Amatsu
         {
             try
             {
-                RestClient client = new RestClient("https://osu.ppy.sh/api/");
-                RestRequest request = new RestRequest($"get_beatmaps?b={map_id}&k={Data.ApiKey}");
+                var client = new RestClient("https://osu.ppy.sh/api/");
+                var request = new RestRequest($"get_beatmaps?b={map_id}&k={Data.ApiKey}");
                 request.Timeout = 5000;
                 client.Timeout = 5000;
-                IRestResponse response = client.Execute(request);
+                var response = client.Execute(request);
                 string result = response.Content;
                 if (result.Length > 2)
                 {
-                    Beatmaps btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+                    var btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
                     od = Convert.ToDouble(btm.diff_overall.Replace('.', ','));
                     obj = Convert.ToDouble(Osu.Combo(map_id));
                     stars = Convert.ToDouble(btm.difficultyrating.Replace('.', ','));

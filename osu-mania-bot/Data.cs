@@ -39,17 +39,17 @@ namespace Amatsu
         {
             try
             {
-                double formula;
+                double ppWindow;
                 double successRateWindow;
                 var rand = new Random();
                 if (pp > 30)
                 {
-                    formula = pp / 20;
+                    ppWindow = pp / 20;
                     successRateWindow = pp / 100;
                 }
                 else
                 {
-                    formula = 5;
+                    ppWindow = 5;
                     successRateWindow = 0;
                 }
                 var strings = new List<string>();
@@ -69,7 +69,7 @@ namespace Amatsu
                     {
                         double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
                         string score = str.Split(',')[1];
-                        if (successRate + successRateWindow > (0.32 - Players[username].SuccessRateMod * 2) && Convert.ToDouble(score) >= pp - formula && Convert.ToDouble(score) <= pp + formula && !string.IsNullOrWhiteSpace(score))
+                        if (successRate + successRateWindow > (0.32 - Players[username].SuccessRateMod * 2) && Convert.ToDouble(score) >= pp - ppWindow && Convert.ToDouble(score) <= pp + ppWindow && !string.IsNullOrWhiteSpace(score))
                         {
                             scores.Add(str);
                         }
@@ -127,7 +127,7 @@ namespace Amatsu
             try
             {
                 var rand = new Random();
-                double formula = 0.05 + difficulty / 20;
+                double starRatingWindow = 0.05 + difficulty / 20;
                 var strings = new List<string>();
                 if (keys == "7")
                 {
@@ -143,7 +143,7 @@ namespace Amatsu
                     foreach (string str in strings)
                     {
                         var star_rating = str.Split(',')[4].Replace('.', ',');
-                        if (Convert.ToDouble(star_rating) >= difficulty - formula && Convert.ToDouble(star_rating) <= difficulty + formula && !string.IsNullOrWhiteSpace(star_rating))
+                        if (Convert.ToDouble(star_rating) >= difficulty - starRatingWindow && Convert.ToDouble(star_rating) <= difficulty + starRatingWindow && !string.IsNullOrWhiteSpace(star_rating))
                         {
                             scores.Add(str);
                         }
@@ -155,7 +155,7 @@ namespace Amatsu
                     foreach (string str in strings)
                     {
                         var star_rating = str.Split(',')[4].Replace('.', ',');
-                        if (Convert.ToDouble(star_rating) >= difficulty - formula && Convert.ToDouble(star_rating) <= difficulty + formula / 2.5 && !string.IsNullOrWhiteSpace(star_rating))
+                        if (Convert.ToDouble(star_rating) >= difficulty - starRatingWindow && Convert.ToDouble(star_rating) <= difficulty + starRatingWindow / 2.5 && !string.IsNullOrWhiteSpace(star_rating))
                         {
                             scores.Add(str);
                         }
@@ -409,57 +409,57 @@ namespace Amatsu
             }
         }
 
-        public static double Calculate(double od, double stars, double obj, double acc, double _scr = 0)
+        public static double Calculate(double od, double starRating, double objectCount, double acc, double scoreValue = 0)
         {
             try
             {
                 od = 64 - (3 * od);
                 double strainMult = 1;
 
-                if (acc == 98 && _scr == 0)
+                if (acc == 98 && scoreValue == 0)
                 {
-                    _scr = 900000;
+                    scoreValue = 900000;
                 }
-                else if (acc == 95 && _scr == 0)
+                else if (acc == 95 && scoreValue == 0)
                 {
-                    _scr = 800000;
+                    scoreValue = 800000;
                 }
-                else if (acc == 92 && _scr == 0)
+                else if (acc == 92 && scoreValue == 0)
                 {
-                    _scr = 700000;
+                    scoreValue = 700000;
                 }
 
-                if (_scr < 500000)
+                if (scoreValue < 500000)
                 {
-                    strainMult = _scr / 500000 * 0.1;
+                    strainMult = scoreValue / 500000 * 0.1;
                 }
-                else if (_scr < 600000)
+                else if (scoreValue < 600000)
                 {
-                    strainMult = (_scr - 500000) / 100000 * 0.2 + 0.1;
+                    strainMult = (scoreValue - 500000) / 100000 * 0.2 + 0.1;
                 }
-                else if (_scr < 700000)
+                else if (scoreValue < 700000)
                 {
-                    strainMult = (_scr - 600000) / 100000 * 0.35 + 0.3;
+                    strainMult = (scoreValue - 600000) / 100000 * 0.35 + 0.3;
                 }
-                else if (_scr < 800000)
+                else if (scoreValue < 800000)
                 {
-                    strainMult = (_scr - 700000) / 100000 * 0.2 + 0.65;
+                    strainMult = (scoreValue - 700000) / 100000 * 0.2 + 0.65;
                 }
-                else if (_scr < 900000)
+                else if (scoreValue < 900000)
                 {
-                    strainMult = (_scr - 800000) / 100000 * 0.1 + 0.85;
+                    strainMult = (scoreValue - 800000) / 100000 * 0.1 + 0.85;
                 }
                 else
                 {
-                    strainMult = (_scr - 900000) / 100000 * 0.05 + 0.95;
+                    strainMult = (scoreValue - 900000) / 100000 * 0.05 + 0.95;
                 }
 
-                double StrainBase = (Math.Pow(5 * Math.Max(1, stars / 0.0825) - 4, 3) / 110000) * (1 + 0.1 * Math.Min(1, obj / 1500));
-                double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(1.15, Math.Pow(obj / 1500, 0.3));
+                double StrainBase = (Math.Pow(5 * Math.Max(1, starRating / 0.0825) - 4, 3) / 110000) * (1 + 0.1 * Math.Min(1, objectCount / 1500));
+                double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(1.15, Math.Pow(objectCount / 1500, 0.3));
                 double fo0 = Math.Pow(AccValue, 1.1);
                 double fo1 = Math.Pow(StrainBase * strainMult, 1.1);
                 double final_output = Math.Round(Math.Pow(fo0 + fo1, 1 / 1.1) * 1.1);
-                Log.Write($"(Data.Calculate) fo0 {fo0} fo1 {fo1} StrainBase {StrainBase} AccValue {AccValue} / OD: {od} STARS: {stars} OBJECT COUNT: {obj}, ACC: {acc}");
+                Log.Write($"(Data.Calculate) fo0 {fo0} fo1 {fo1} StrainBase {StrainBase} AccValue {AccValue} / OD: {od} STARS: {starRating} OBJECT COUNT: {objectCount}, ACC: {acc}");
                 Log.Write($"(Data.Calculate) {final_output}");
                 return final_output;
             }
@@ -467,7 +467,7 @@ namespace Amatsu
             {
                 Console.WriteLine(ex);
                 Log.Write($"Error: {ex}");
-                Log.Write($"OD: {od} STARS: {stars} OBJECT COUNT: {obj}, ACC: {acc}");
+                Log.Write($"OD: {od} STARS: {starRating} OBJECT COUNT: {objectCount}, ACC: {acc}");
                 return -1;
             }
         }
