@@ -11,8 +11,6 @@ namespace Amatsu
         {
             try
             {
-                //double pp = 0;
-                //double acc = 0;
                 var client = new RestClient("https://osu.ppy.sh/api");
                 var request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=15&m=3");
                 client.Timeout = 5000;
@@ -22,16 +20,6 @@ namespace Amatsu
                 if (result.Length > 2 && !result.Contains("error"))
                 {
                     var usb = JsonConvert.DeserializeObject<UserBest[]>(result);
-                    /*
-                    for (int i = 0; i < usb.Length; i++)
-                    {
-                        double acc0 = (Convert.ToDouble(usb[i].count300) * 100 + Convert.ToDouble(usb[i].count100) * 33.333 + Convert.ToDouble(usb[i].count50) * 16.666 + Convert.ToDouble(usb[i].countmiss) * 0) / (Convert.ToDouble(usb[i].count300) + Convert.ToDouble(usb[i].count100) + Convert.ToDouble(usb[i].count50) + Convert.ToDouble(usb[i].countmiss));
-                        pp = pp + Convert.ToDouble(usb[i].pp.Replace('.', ','));
-                        acc = acc + acc0;
-                    }
-                    pp = pp / usb.Length;
-                    acc = acc / usb.Length;
-                    */
                     double ppFirst = Convert.ToDouble(usb[0].pp.Replace('.', ','));
                     double ppLast = Convert.ToDouble(usb[usb.Length - 1].pp.Replace('.', ','));
                     var output = new List<double>();

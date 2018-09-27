@@ -268,37 +268,6 @@ namespace Amatsu
                 {
                     irc.SendReply(e.Data, "[https://youtu.be/SpiPD_Ti_Bg Держи^^]");
                 }
-                else if (command[0] == "!dt")
-                {
-                    if (command.Length < 2)
-                    {
-                        
-                    }
-                    else if (command[1] == "4" || command[1] == "7")
-                    {
-                        var pp = Osu.GetPP(e.Data.Nick)[0];
-                        Log.Write($"{pp}");
-                        if (pp == -1)
-                        {
-                            irc.SendReply(e.Data, "Request failed. Time for a break, maybe? :) Possible problems: You don't have enough scores in mania mode; Connection failed for some reason.");
-                        }
-                        else
-                        {
-                            string get_map;
-                            if (command[1] == "4")
-                            {
-                                get_map = Data.GetDoubleTimeMap(e.Data.Nick, pp, "4");
-                            }
-                            else
-                            {
-                                get_map = Data.GetDoubleTimeMap(e.Data.Nick, pp, "7");
-                            }
-                            Log.Write(get_map);
-                            irc.SendReply(e.Data, get_map);
-                            Console.WriteLine("~Reply sent.");
-                        }
-                    }
-                }
                 else if (command[0] == "!sendreport")
                 {
                     if (command.Length > 1)

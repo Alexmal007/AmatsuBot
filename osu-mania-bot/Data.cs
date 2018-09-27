@@ -302,94 +302,6 @@ namespace Amatsu
             }
         }
 
-        public static string GetDoubleTimeMap(string username, double pp, string keys, double acc = 0)
-        {
-            try
-            {
-                if (!Players.ContainsKey(username))
-                {
-                    CreatePlayer(username, pp, keys);
-                }
-
-                double formula = pp / 20;
-                var maps = new List<string>();
-                if (keys == "4")
-                {
-                    foreach (string map in _4keysDT)
-                    {
-                        if (Convert.ToDouble(map.Split(',')[1]) >= pp - formula && Convert.ToDouble(map.Split(',')[1]) <= pp + formula && !Players[username].DTList.Contains(map.Split(',')[0]))
-                        {
-                            maps.Add(map);
-                        }
-                    }
-                }
-                else if (keys == "7")
-                {
-                    foreach (string map in _7keysDT)
-                    {
-                        if (Convert.ToDouble(map.Split(',')[1]) >= pp + formula && Convert.ToDouble(map.Split(',')[1]) <= pp - formula && !Players[username].DTList.Contains(map.Split(',')[0]))
-                        {
-                            maps.Add(map);
-                        }
-                    }
-                }
-
-                if (maps.Count == 0)
-                {
-                    if (keys == "4")
-                    {
-                        foreach (string map in _4keysDT)
-                        {
-                            if (Convert.ToDouble(map.Split(',')[1]) >= pp - formula && Convert.ToDouble(map.Split(',')[1]) <= pp + formula && !Players[username].DTList.Contains(map.Split(',')[0]))
-                            {
-                                maps.Add(map);
-                            }
-                        }
-                    }
-                    else if (keys == "7")
-                    {
-                        foreach (string map in _7keysDT)
-                        {
-                            if (Convert.ToDouble(map.Split(',')[1]) >= pp + formula && Convert.ToDouble(map.Split(',')[1]) <= pp - formula && !Players[username].DTList.Contains(map.Split(',')[0]))
-                            {
-                                maps.Add(map);
-                            }
-                        }
-                    }
-                }
-
-                maps.Shuffle();
-                var rand = new Random();
-                int n = rand.Next(0, maps.Count);
-                string map_id = maps[n].Split(',')[0];
-                string points = maps[n].Split(',')[1];
-                string accuracy = maps[n].Split(',')[2];
-                var client = new RestClient("https://osu.ppy.sh/api/");
-                var request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
-                client.Timeout = 5000;
-                request.Timeout = 5000;
-                var result = client.Execute(request).Content;
-                if (result.Length > 2)
-                {
-                    var btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
-                    double bpm = Math.Round(Convert.ToDouble(btm.bpm) * 1.5, 1);
-                    var output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  {points}pp for about {accuracy}% | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
-                    Players[username].DTList.Add(map_id);
-                    return output;
-                }
-                else
-                {
-                    return "Error occuried.";
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Write(ex.ToString());
-                Console.WriteLine(ex);
-                return "Error occured.";
-            }
-        }
-
         public static void CreatePlayer(string username, double pp, string keys)
         {
             double formula;
@@ -480,10 +392,8 @@ namespace Amatsu
                     strainMult *= 0.90 + (scoreValue - 900000) / 100000 * 0.1;
                 }
 
-                //double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(1.15, Math.Pow(objectCount / 1500, 0.3));
                 double AccValue = Math.Max(0, 0.2 - ((od - 34) * 0.006667)) * strainMult * Math.Pow((Math.Max(0.0, (scoreValue - 960000)) / 40000.0), 1.1);
                 double final_output = Math.Round(Math.Pow(Math.Pow(strainMult,1.1) + Math.Pow(AccValue,1.1),1.0/1.1) * 0.8);
-                //Log.Write($"(Data.Calculate) fo0 {fo0} fo1 {fo1} StrainBase {StrainBase} AccValue {AccValue} / OD: {od} STARS: {starRating} OBJECT COUNT: {objectCount}, ACC: {acc}");
                 Log.Write($"(Data.Calculate) {final_output}");
                 return final_output;
             }
