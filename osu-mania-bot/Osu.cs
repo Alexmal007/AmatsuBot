@@ -7,14 +7,14 @@ namespace Amatsu
 {
     class Osu
     {
-        public static List<double> GetAveragePP(string username)
+        public static List<double> GetPP(string username)
         {
             try
             {
-                double pp = 0;
-                double acc = 0;
+                //double pp = 0;
+                //double acc = 0;
                 var client = new RestClient("https://osu.ppy.sh/api");
-                var request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=10&m=3");
+                var request = new RestRequest($"/get_user_best?u={username}&k={Data.ApiKey}&limit=15&m=3");
                 client.Timeout = 5000;
                 request.Timeout = 5000;
                 var response = client.Execute(request);
@@ -22,6 +22,7 @@ namespace Amatsu
                 if (result.Length > 2 && !result.Contains("error"))
                 {
                     var usb = JsonConvert.DeserializeObject<UserBest[]>(result);
+                    /*
                     for (int i = 0; i < usb.Length; i++)
                     {
                         double acc0 = (Convert.ToDouble(usb[i].count300) * 100 + Convert.ToDouble(usb[i].count100) * 33.333 + Convert.ToDouble(usb[i].count50) * 16.666 + Convert.ToDouble(usb[i].countmiss) * 0) / (Convert.ToDouble(usb[i].count300) + Convert.ToDouble(usb[i].count100) + Convert.ToDouble(usb[i].count50) + Convert.ToDouble(usb[i].countmiss));
@@ -30,9 +31,12 @@ namespace Amatsu
                     }
                     pp = pp / usb.Length;
                     acc = acc / usb.Length;
+                    */
+                    double ppFirst = Convert.ToDouble(usb[0].pp.Replace('.', ','));
+                    double ppLast = Convert.ToDouble(usb[usb.Length - 1].pp.Replace('.', ','));
                     var output = new List<double>();
-                    output.Add(pp);
-                    output.Add(acc);
+                    output.Add(ppFirst);
+                    output.Add(ppLast);
                     return output;
                 }
                 else
@@ -104,62 +108,6 @@ namespace Amatsu
             {
                 Log.Write("Error: " + ex);
                 return "Error.";
-            }
-        }
-
-        public static string GetKeys(string username)
-        {
-            try
-            {
-                var keys4Count = 0;
-                var keys7Count = 0;
-                var client = new RestClient("https://osu.ppy.sh/api/");
-                var request = new RestRequest($"get_user_best?u={username}&k={Data.ApiKey}&m=3&limit=100");
-                client.Timeout = 5000;
-                request.Timeout = 5000;
-                var result = client.Execute(request).Content;
-                if (result.Length > 2)
-                {
-                    var topScores = JsonConvert.DeserializeObject<UserBest[]>(result);
-                    for (int i = 0; i < topScores.Length; i++)
-                    {
-                        var mapInfo = new MapInfo(topScores[i].beatmap_id);
-                        if (mapInfo.keys == 4)
-                        {
-                            keys4Count++;
-                        }
-                        else if (mapInfo.keys == 7)
-                        {
-                            keys7Count++;
-                        }
-                    }
-                    if (keys4Count >= keys7Count)
-                    {
-                        return $"{keys4Count}";
-                    }
-                    else if (keys4Count < keys7Count)
-                    {
-                        return $"{keys7Count}";
-                    }
-                    else
-                    {
-                        Console.WriteLine("Keys error.");
-                        Log.Write($"Keys error. Response length: {result.Length}, keys4Count: {keys4Count}, keys7Count: {keys7Count}.");
-                        return "Error occuried.";
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Error occuried. Result length: {result.Length}.");
-                    Log.Write($"Error occuried. Result length: {result.Length}.");
-                    return "Error occuried.";
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Write($"{ex}");
-                Console.WriteLine(ex);
-                return "Error occuried.";
             }
         }
 

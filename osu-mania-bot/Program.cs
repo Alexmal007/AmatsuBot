@@ -19,6 +19,8 @@ namespace Amatsu
         {
             Log.Write(e.Data.RawMessage);
             Console.WriteLine(e.Data.Message);
+
+
             if (e.Data.RawMessage.Contains("https://osu.ppy.sh/b/") || e.Data.RawMessage.Contains("http://osu.ppy.sh/b/"))
             {
                 try
@@ -95,20 +97,19 @@ namespace Amatsu
                 var command = e.Data.Message.ToLower().Split(' ');
 
                 if (command[0] == "!r")
-                {
+                {   
+
                     if (command.Length > 1 && command[1] == "4")
                     {
-                        var list = Osu.GetAveragePP(e.Data.Nick);
-                        var pp = list[0];
-                        var acc = list[1];
-                        Log.Write($"{pp} | {acc}");
-                        if (pp == -1)
+                        var list = Osu.GetPP(e.Data.Nick);
+                        Log.Write($"{list[0]} | {list[1]}");
+                        if (list[0] == -1)
                         {
-                            irc.SendReply(e.Data, "Request failed, try again. Time for a break, maybe? :)");
+                            irc.SendReply(e.Data, "Request failed. Time for a break, maybe? :) Possible problems: You don't have enough scores in mania mode; Connection failed for some reason.");
                         }
                         else
                         {
-                            var get_map = Data.GetMap(e.Data.Nick, pp, "4");
+                            var get_map = Data.GetMap(e.Data.Nick, list, "4");
                             Log.Write(get_map);
                             irc.SendReply(e.Data, get_map);
                             Console.WriteLine("~Reply sent.");
@@ -116,11 +117,11 @@ namespace Amatsu
                     }
                     else if (command.Length > 1 && command[1] == "7")
                     {
-                        var pp = Osu.GetAveragePP(e.Data.Nick)[0];
-                        Log.Write($"{pp}");
-                        if (pp == -1)
+                        var pp = Osu.GetPP(e.Data.Nick);
+                        Log.Write($"{pp[0]}");
+                        if (pp[0] == -1)
                         {
-                            irc.SendReply(e.Data, "Request failed, try again. Time for a break, maybe? :)");
+                            irc.SendReply(e.Data, "Request failed. Time for a break, maybe? :) Possible problems: You don't have enough scores in mania mode; Connection failed for some reason.");
                         }
                         else
                         {
@@ -261,19 +262,59 @@ namespace Amatsu
                 }
                 else if (command[0] == "!help" || command[0] == "!info")
                 {
-                    irc.SendReply(e.Data, "Hello, I'm Amatsu! and I can do some cute things for you. Forum thread can be found [https://osu.ppy.sh/forum/t/637171 here], commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here]");
+                    irc.SendReply(e.Data, "Hello, I'm Amatsu! And I can do some cute things for you. Forum thread can be found [https://osu.ppy.sh/forum/t/637171 here], commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here]");
                 }
                 else if (command[0] == "!coffee")
                 {
                     irc.SendReply(e.Data, "[https://youtu.be/SpiPD_Ti_Bg Держи^^]");
                 }
-                else if (command[0] == "!keys")
+                else if (command[0] == "!dt")
                 {
-                    irc.SendReply(e.Data, Osu.GetKeys(e.Data.Nick));
+                    if (command.Length < 2)
+                    {
+                        
+                    }
+                    else if (command[1] == "4" || command[1] == "7")
+                    {
+                        var pp = Osu.GetPP(e.Data.Nick)[0];
+                        Log.Write($"{pp}");
+                        if (pp == -1)
+                        {
+                            irc.SendReply(e.Data, "Request failed. Time for a break, maybe? :) Possible problems: You don't have enough scores in mania mode; Connection failed for some reason.");
+                        }
+                        else
+                        {
+                            string get_map;
+                            if (command[1] == "4")
+                            {
+                                get_map = Data.GetDoubleTimeMap(e.Data.Nick, pp, "4");
+                            }
+                            else
+                            {
+                                get_map = Data.GetDoubleTimeMap(e.Data.Nick, pp, "7");
+                            }
+                            Log.Write(get_map);
+                            irc.SendReply(e.Data, get_map);
+                            Console.WriteLine("~Reply sent.");
+                        }
+                    }
+                }
+                else if (command[0] == "!sendreport")
+                {
+                    if (command.Length > 1)
+                    {
+                        irc.SendMessage(SendType.Message,username,$"(REPORT) {e.Data.Nick}: {command[1]}");
+                        Log.Report($"{e.Data.Nick}: {command[1]}");
+                        irc.SendReply(e.Data, "Report sent!");
+                    }
+                    else
+                    {
+                        irc.SendReply(e.Data, "Too few arguments. Usage: !report [report message].");
+                    }
                 }
                 else
                 {
-                    irc.SendReply(e.Data, "Unknown command.");
+                    irc.SendReply(e.Data, "Unknown command. All available commands are listed [https://github.com/Alexmal007/AmatsuBot/wiki here].");
                 }
             }
         }

@@ -1,0 +1,3 @@
+Your osu!api key (https://osu.ppy.sh/p/api):1234567
+Your username (https://osu.ppy.sh/p/irc):-_Alexmal_-
+Your password (https://osu.ppy.sh/p/irc):my_password

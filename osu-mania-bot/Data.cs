@@ -35,23 +35,13 @@ namespace Amatsu
             }
         }
 
-        public static string GetMap(string username, double pp, string keys)
+        public static string GetMap(string username, List<double> pp, string keys)
         {
             try
             {
                 double ppWindow;
                 double successRateWindow;
                 var rand = new Random();
-                if (pp > 30)
-                {
-                    ppWindow = pp / 20;
-                    successRateWindow = pp / 100;
-                }
-                else
-                {
-                    ppWindow = 5;
-                    successRateWindow = 0;
-                }
                 var strings = new List<string>();
                 if (keys == "7")
                     strings = _7keys;
@@ -61,7 +51,29 @@ namespace Amatsu
 
                 if (!Players.ContainsKey(username))
                 {
-                    CreatePlayer(username, pp, keys);
+                    strings = new List<string>();
+                    if (keys == "7")
+                    {
+                        strings = _7keys;
+                    }
+                    else if (keys == "4")
+                    {
+                        strings = _4keys;
+                    }
+                    scores = new List<string>();
+                    if (!Players.ContainsKey(username))
+                    {
+                        foreach (string str in strings)
+                        {
+                            double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
+                            string score = str.Split(',')[1];
+                            if (successRate > 0.25 && Convert.ToDouble(score) >= pp[1] && Convert.ToDouble(score) <= (pp[0] + pp[0]/10) && !string.IsNullOrWhiteSpace(score))
+                            {
+                                scores.Add(str);
+                            }
+                        }
+                        Players.Add(username, new Player(username, scores));
+                    }
                 }
                 else if (Players[username].Scoreslist.Count < 2)
                 {
@@ -69,7 +81,7 @@ namespace Amatsu
                     {
                         double successRate = Convert.ToDouble(str.Split(',')[5].Replace('.', ','));
                         string score = str.Split(',')[1];
-                        if (successRate + successRateWindow > (0.32 - Players[username].SuccessRateMod * 2) && Convert.ToDouble(score) >= pp - ppWindow && Convert.ToDouble(score) <= pp + ppWindow && !string.IsNullOrWhiteSpace(score))
+                        if (successRate > 0.18  && Convert.ToDouble(score) >= pp[1] && Convert.ToDouble(score) <= pp[0] && !string.IsNullOrWhiteSpace(score))
                         {
                             scores.Add(str);
                         }
@@ -78,39 +90,46 @@ namespace Amatsu
                     Players[username].Scoreslist = scores;
                     Players[username].SuccessRateMod += 1;
                 }
-
-                int n = rand.Next(0, Players[username].Scoreslist.Count);
-                scores = Players[username].Scoreslist;
-                string map_id = scores[n].Split(',')[3];
-                string pp98 = scores[n].Split(',')[2];
-                string pp95 = scores[n].Split(',')[1];
-                string pp92 = scores[n].Split(',')[0];
-                scores.RemoveAt(n);
-
-                var client = new RestClient("https://osu.ppy.sh/api/");
-                var request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
-                client.Timeout = 5000;
-                request.Timeout = 5000;
-                var response = client.Execute(request);
-                scores.Clear();
-                if (response.ResponseStatus != ResponseStatus.TimedOut)
+                if (Players[username].Scoreslist.Count > 0)
                 {
-                    string result = response.Content;
-                    if (result.Length > 2)
-                    {
-                        var btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+                    Log.Write($"Scorlist count: {Players[username].Scoreslist.Count}");
+                    int n = rand.Next(0, Players[username].Scoreslist.Count);
+                    scores = Players[username].Scoreslist;
+                    string map_id = scores[n].Split(',')[3];
+                    string pp98 = scores[n].Split(',')[2];
+                    string pp95 = scores[n].Split(',')[1];
+                    string pp92 = scores[n].Split(',')[0];
+                    scores.RemoveAt(n);
 
-                        string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
-                        return output;
+                    var client = new RestClient("https://osu.ppy.sh/api/");
+                    var request = new RestRequest($"get_beatmaps?k={ApiKey}&b={map_id}&m=3");
+                    client.Timeout = 5000;
+                    request.Timeout = 5000;
+                    var response = client.Execute(request);
+                    scores.Clear();
+                    if (response.ResponseStatus != ResponseStatus.TimedOut)
+                    {
+                        string result = response.Content;
+                        if (result.Length > 2)
+                        {
+                            var btm = JsonConvert.DeserializeObject<Beatmaps>(result.Substring(1, result.Length - 2));
+
+                            string output = $"[https://osu.ppy.sh/b/{map_id} {btm.artist} - {btm.title} [{btm.version}]]  92%: {pp92}pp, 95%: {pp95}pp, 98%: {pp98}pp | {btm.bpm}bpm  {Math.Round(Convert.ToDouble(btm.difficultyrating.Replace('.', ',')), 2)}*";
+                            return output;
+                        }
+                        else
+                        {
+                            return "Whoops! Looks like request failed. Try again.";
+                        }
                     }
                     else
                     {
-                        return "Whoops! Looks like request failed. Try again.";
+                        return "Timed Out.";
                     }
                 }
                 else
                 {
-                    return "Timed Out.";
+                    return "No maps for you. :(";
                 }
             }
             catch (Exception ex)
@@ -150,7 +169,7 @@ namespace Amatsu
                     }
                     Players.Add(username, new Player(username, scores));
                 }
-                else if (Players[username].Scoreslist.Count == 0)
+                else if (Players[username].Scoreslist.Count < 2)
                 {
                     foreach (string str in strings)
                     {
@@ -160,6 +179,7 @@ namespace Amatsu
                             scores.Add(str);
                         }
                     }
+                    scores.Shuffle();
                     Players[username].Scoreslist = scores;
                 }
                 var n = rand.Next(0, scores.Count);
@@ -229,7 +249,7 @@ namespace Amatsu
                     }
                     Players.Add(username, new Player(username, scores));
                 }
-                else if (Players[username].Scoreslist.Count == 0)
+                else if (Players[username].Scoreslist.Count < 2)
                 {
                     foreach (string str in strings)
                     {
@@ -239,6 +259,7 @@ namespace Amatsu
                             scores.Add(str);
                         }
                     }
+                    scores.Shuffle();
                     Players[username].Scoreslist = scores;
                 }
                 var n = rand.Next(0, scores.Count);
@@ -413,8 +434,13 @@ namespace Amatsu
         {
             try
             {
+
                 od = 64 - (3 * od);
                 double strainMult = 1;
+
+                strainMult = Math.Pow(5.0 *Math.Max(1.0f, starRating / 0.2) - 4.0, 2.2) / 135.0;
+
+                strainMult *= 1 + 0.1f * Math.Min(1.0, objectCount / 1500.0);
 
                 if (acc == 98 && scoreValue == 0)
                 {
@@ -429,37 +455,35 @@ namespace Amatsu
                     scoreValue = 700000;
                 }
 
-                if (scoreValue < 500000)
+                if (scoreValue <= 500000)
                 {
-                    strainMult = scoreValue / 500000 * 0.1;
+                    strainMult = 0;
                 }
-                else if (scoreValue < 600000)
+                else if (scoreValue <= 600000)
                 {
-                    strainMult = (scoreValue - 500000) / 100000 * 0.2 + 0.1;
+                    strainMult *= (scoreValue - 500000) / 100000.0 * 0.3;
                 }
-                else if (scoreValue < 700000)
+                else if (scoreValue <= 700000)
                 {
-                    strainMult = (scoreValue - 600000) / 100000 * 0.35 + 0.3;
+                    strainMult *= 0.3 + (scoreValue - 600000) / 100000.0 * 0.25;
                 }
-                else if (scoreValue < 800000)
+                else if (scoreValue <= 800000)
                 {
-                    strainMult = (scoreValue - 700000) / 100000 * 0.2 + 0.65;
+                    strainMult *= 0.55 + (scoreValue - 700000) / 100000 * 0.20;
                 }
-                else if (scoreValue < 900000)
+                else if (scoreValue <= 900000)
                 {
-                    strainMult = (scoreValue - 800000) / 100000 * 0.1 + 0.85;
+                    strainMult *= 0.75 + (scoreValue - 800000) / 100000 * 0.15;
                 }
                 else
                 {
-                    strainMult = (scoreValue - 900000) / 100000 * 0.05 + 0.95;
+                    strainMult *= 0.90 + (scoreValue - 900000) / 100000 * 0.1;
                 }
 
-                double StrainBase = (Math.Pow(5 * Math.Max(1, starRating / 0.0825) - 4, 3) / 110000) * (1 + 0.1 * Math.Min(1, objectCount / 1500));
-                double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(1.15, Math.Pow(objectCount / 1500, 0.3));
-                double fo0 = Math.Pow(AccValue, 1.1);
-                double fo1 = Math.Pow(StrainBase * strainMult, 1.1);
-                double final_output = Math.Round(Math.Pow(fo0 + fo1, 1 / 1.1) * 1.1);
-                Log.Write($"(Data.Calculate) fo0 {fo0} fo1 {fo1} StrainBase {StrainBase} AccValue {AccValue} / OD: {od} STARS: {starRating} OBJECT COUNT: {objectCount}, ACC: {acc}");
+                //double AccValue = Math.Pow((150 / od) * Math.Pow(acc / 100, 16), 1.8) * 2.5 * Math.Min(1.15, Math.Pow(objectCount / 1500, 0.3));
+                double AccValue = Math.Max(0, 0.2 - ((od - 34) * 0.006667)) * strainMult * Math.Pow((Math.Max(0.0, (scoreValue - 960000)) / 40000.0), 1.1);
+                double final_output = Math.Round(Math.Pow(Math.Pow(strainMult,1.1) + Math.Pow(AccValue,1.1),1.0/1.1) * 0.8);
+                //Log.Write($"(Data.Calculate) fo0 {fo0} fo1 {fo1} StrainBase {StrainBase} AccValue {AccValue} / OD: {od} STARS: {starRating} OBJECT COUNT: {objectCount}, ACC: {acc}");
                 Log.Write($"(Data.Calculate) {final_output}");
                 return final_output;
             }
